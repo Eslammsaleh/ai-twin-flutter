@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import 'package:flutter_application_1/screens/home/home_screen.dart';
-import 'package:flutter_application_1/screens/settings/settings_page.dart';
-import 'package:flutter_application_1/screens/chat/chat_page.dart';
-import 'package:flutter_application_1/screens/replay/replay_page.dart';
-import 'package:flutter_application_1/screens/timeline/timeline_page.dart';
-import 'package:flutter_application_1/screens/splash/splash_screen.dart';
-import 'package:flutter_application_1/screens/onboarding/onboarding_screen.dart';
+import 'theme/app_theme.dart';
+import 'theme/theme_provider.dart';
+
+import 'screens/home/home_screen.dart';
+import 'screens/settings/settings_page.dart';
+import 'screens/chat/chat_page.dart';
+import 'screens/replay/replay_page.dart';
+import 'screens/timeline/timeline_page.dart';
+import 'screens/splash/splash_screen.dart';
+import 'screens/onboarding/onboarding_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -17,13 +26,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'LifeTwin',
 
-      /// 👈 أول شاشة
-      initialRoute: '/splash',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
 
+      initialRoute: '/splash',
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
@@ -33,11 +46,6 @@ class MyApp extends StatelessWidget {
         '/replay': (context) => const ReplayPage(),
         '/settings': (context) => const SettingsPage(),
       },
-
-      theme: ThemeData(
-        primarySwatch: Colors.purple,
-        scaffoldBackgroundColor: Colors.white,
-      ),
     );
   }
 }
