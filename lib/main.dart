@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
+import 'providers/twin_provider.dart';
 
 import 'screens/home/home_screen.dart';
 import 'screens/settings/settings_page.dart';
@@ -14,8 +15,11 @@ import 'screens/onboarding/onboarding_screen.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => TwinProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -34,7 +38,8 @@ class MyApp extends StatelessWidget {
 
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
+      themeMode:
+          themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
 
       initialRoute: '/splash',
       routes: {

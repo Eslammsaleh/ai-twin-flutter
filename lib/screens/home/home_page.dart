@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'package:flutter_application_1/theme/app_colors.dart';
 import 'package:flutter_application_1/widgets/info_card.dart';
+import '../../providers/twin_provider.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -9,6 +12,9 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isDark =
         Theme.of(context).brightness == Brightness.dark;
+
+    /// 🔥 التوأم الحقيقي
+    final twin = Provider.of<TwinProvider>(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -43,13 +49,25 @@ class HomePage extends StatelessWidget {
               ),
               const SizedBox(height: 25),
 
-              // Info Cards
+              /// 🔥 Info Cards (Real Data)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  InfoCard(title: "Memories", value: "24", icon: Icons.favorite),
-                  InfoCard(title: "Twin Level", value: "Advanced", icon: Icons.star),
-                  InfoCard(title: "This Week", value: "12", icon: Icons.access_time),
+                children: [
+                  InfoCard(
+                    title: "Memories",
+                    value: twin.profile.memories.toString(),
+                    icon: Icons.favorite,
+                  ),
+                  InfoCard(
+                    title: "Twin Level",
+                    value: twin.profile.level,
+                    icon: Icons.star,
+                  ),
+                  InfoCard(
+                    title: "Chats",
+                    value: twin.profile.conversations.toString(),
+                    icon: Icons.chat,
+                  ),
                 ],
               ),
 
@@ -111,8 +129,11 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: 10),
-                    Icon(Icons.flash_on,
-                        color: AppColors.primary, size: 45),
+                    Icon(
+                      Icons.flash_on,
+                      color: AppColors.primary,
+                      size: 45,
+                    ),
                   ],
                 ),
               ),

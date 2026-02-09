@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/settings/life_twin_editor_page.dart';
 import 'package:provider/provider.dart';
+
 import '../../theme/theme_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../providers/twin_provider.dart';
+
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -18,6 +22,7 @@ class SettingsPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          /// User Info
           Row(
             children: const [
               CircleAvatar(
@@ -29,19 +34,80 @@ class SettingsPage extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Alex",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Alex",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   SizedBox(height: 5),
-                  Text("alex@email.com",
-                      style: TextStyle(color: Colors.grey)),
+                  Text(
+                    "alex@email.com",
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
             ],
           ),
+
+          /// 🔥 LifeTwin Profile (Clickable)
+          const SizedBox(height: 25),
+
+          Consumer<TwinProvider>(
+            builder: (context, twin, _) {
+              return InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LifeTwinEditorPage(),
+                    ),
+                  );
+                },
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  color: AppColors.cardBackground,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "LifeTwin Profile",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text("Level: ${twin.profile.level}"),
+                        Text("Conversations: ${twin.profile.conversations}"),
+                        Text("Memories: ${twin.profile.memories}"),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Tap to edit",
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+
           const SizedBox(height: 30),
-          const Text("GENERAL",
-              style: TextStyle(color: Colors.grey, fontSize: 13)),
+          const Text(
+            "GENERAL",
+            style: TextStyle(color: Colors.grey, fontSize: 13),
+          ),
           const SizedBox(height: 10),
 
           SwitchListTile(
