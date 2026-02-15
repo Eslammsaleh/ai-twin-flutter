@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "963946020869",
+    "project_id": "lifetwin-hazem-2004-aba31",
+    "storage_bucket": "lifetwin-hazem-2004-aba31.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:963946020869:android:6d1bba89b780df9ac59c6c",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdbmPiGjiWuhDLxQwTb1XYZZHF2fNbgf0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

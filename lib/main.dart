@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import 'firebase_options.dart';
 
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
@@ -13,7 +16,18 @@ import 'screens/timeline/timeline_page.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 
-void main() {
+// Auth
+import 'screens/auth/auth_gate.dart';
+import 'screens/auth/sign_in_page.dart';
+import 'screens/auth/sign_up_page.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(
     MultiProvider(
       providers: [
@@ -30,21 +44,25 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeProvider = context.watch<ThemeProvider>();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'LifeTwin',
-
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode:
-          themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
-
+      themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
+
+        // Auth
+        '/auth': (context) => const AuthGate(),
+        '/signin': (context) => const SignInPage(),
+        '/signup': (context) => const SignUpPage(),
+
+        // App
         '/home': (context) => const HomeScreen(),
         '/chat': (context) => const ChatPage(),
         '/timeline': (context) => const TimelinePage(),
