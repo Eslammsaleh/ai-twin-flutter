@@ -1,5 +1,10 @@
+// home_page.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/chat/chat_page.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 import 'package:flutter_application_1/theme/app_colors.dart';
 import 'package:flutter_application_1/widgets/info_card.dart';
@@ -8,13 +13,21 @@ import '../../providers/twin_provider.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
+  String _getUserName() {
+    final user = FirebaseAuth.instance.currentUser;
+    String email = user?.email ?? "User";
+
+    String namePart = email.split('@')[0];
+    String cleanName = namePart.replaceAll(RegExp(r'\d'), '');
+
+    return cleanName.isNotEmpty ? cleanName : "User";
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool isDark =
-        Theme.of(context).brightness == Brightness.dark;
-
-    /// 🔥 التوأم الحقيقي
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final twin = Provider.of<TwinProvider>(context);
+    final userName = _getUserName();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -24,16 +37,15 @@ class HomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               // Welcome
               const Text(
                 "Welcome back",
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 5),
-              const Text(
-                "Alex",
-                style: TextStyle(
+              Text(
+                userName,
+                style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
@@ -49,7 +61,7 @@ class HomePage extends StatelessWidget {
               ),
               const SizedBox(height: 25),
 
-              /// 🔥 Info Cards (Real Data)
+              // Info Cards
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -67,10 +79,17 @@ class HomePage extends StatelessWidget {
                     title: "Chats",
                     value: twin.profile.conversations.toString(),
                     icon: Icons.chat,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChatPage(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
-
               const SizedBox(height: 35),
 
               Text(
@@ -91,7 +110,25 @@ class HomePage extends StatelessWidget {
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
                 children: [
-                  _featureBox(Icons.camera_alt, "AI Photos", Colors.blue),
+                  _featureBox(
+                    Icons.camera_alt,
+                    "AI Photos",
+                    Colors.blue,
+                    onTap: () async {
+                      final picker = ImagePicker();
+                      final XFile? photo =
+                          await picker.pickImage(source: ImageSource.camera);
+                      if (photo != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ChatPage(initialImage: File(photo.path)),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                   _featureBox(Icons.auto_graph, "Progress", Colors.green),
                   _featureBox(Icons.favorite, "Memories", Colors.red),
                   _featureBox(
@@ -102,7 +139,6 @@ class HomePage extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 30),
 
               // Create Video Section

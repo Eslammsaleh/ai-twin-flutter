@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/settings/life_twin_editor_page.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../theme/theme_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../providers/twin_provider.dart';
-
+import 'package:flutter/services.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -13,6 +14,11 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+
+    // 🔥 جلب المستخدم الحالي من Firebase Auth
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email ?? "No email";
+    final name = user?.displayName ?? "User";
 
     return Scaffold(
       appBar: AppBar(
@@ -24,36 +30,36 @@ class SettingsPage extends StatelessWidget {
         children: [
           /// User Info
           Row(
-            children: const [
-              CircleAvatar(
+            children: [
+              const CircleAvatar(
                 radius: 35,
                 backgroundColor: AppColors.primary,
                 child: Icon(Icons.person, size: 40, color: Colors.white),
               ),
-              SizedBox(width: 15),
+              const SizedBox(width: 15),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Alex",
-                    style: TextStyle(
+                    name,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
-                    "alex@email.com",
-                    style: TextStyle(color: Colors.grey),
+                    email,
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
             ],
           ),
 
-          /// 🔥 LifeTwin Profile (Clickable)
           const SizedBox(height: 25),
 
+          /// 🔥 LifeTwin Profile (Clickable)
           Consumer<TwinProvider>(
             builder: (context, twin, _) {
               return InkWell(
@@ -138,14 +144,19 @@ class SettingsPage extends StatelessWidget {
           ),
 
           const SizedBox(height: 20),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-            onPressed: () {},
-            child: const Text("Logout"),
-          ),
+        ElevatedButton(
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.purple, // اللون البنفسجي للخلفية
+    foregroundColor: Colors.white,   // اللون الأبيض للنص
+    padding: const EdgeInsets.symmetric(vertical: 14),
+  ),
+  onPressed: () async {
+    await FirebaseAuth.instance.signOut(); // خروج من Firebase
+    SystemNavigator.pop(); // يغلق التطبيق تماماً
+  },
+  child: const Text("Logout"),
+)
+
         ],
       ),
     );

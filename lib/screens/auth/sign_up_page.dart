@@ -68,70 +68,142 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Sign Up"), centerTitle: true),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            TextField(
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: "Email",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _password,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Password",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _confirm,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Confirm Password",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (_error != null)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
+      backgroundColor: Colors.deepPurple,
+      body: SingleChildScrollView(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 70),
+                Image.asset(
+  "assets/images/logo_apps.png",
+  height: 120,
+),
+                const SizedBox(height: 20),
+                const Text(
+                  "Ai Twin",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 35,
+                    color: Colors.grey,
+                    fontFamily: "pacifico",
+                  ),
                 ),
-                child: Text(_error!, style: const TextStyle(color: Colors.red)),
-              ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _signUp,
-                child: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text("Create Account"),
-              ),
+                const SizedBox(height: 10),
+                const Text(
+                  "Sign Up",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 25,
+                    color: Colors.grey,
+                    fontFamily: "pacifico",
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Email
+                TextField(
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    hintText: "Email",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                // Password
+                TextField(
+                  controller: _password,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: "Password",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                // Confirm Password
+                TextField(
+                  controller: _confirm,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: "Confirm Password",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (_error != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                const SizedBox(height: 15),
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _loading ? null : _signUp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurpleAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: _loading
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : const Text(
+                            "Create Account",
+                            style: TextStyle(fontSize: 18),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "have alraedy account?",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        " login",
+                        style: TextStyle(
+                          color: Colors.deepPurpleAccent,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("عندي حساب بالفعل (Sign In)"),
-            ),
-          ],
+          ),
         ),
       ),
     );
