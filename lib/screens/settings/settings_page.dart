@@ -21,10 +21,7 @@ class SettingsPage extends StatelessWidget {
     final name = user?.displayName ?? "User";
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Settings"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("Settings"), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -48,10 +45,7 @@ class SettingsPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  Text(
-                    email,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
+                  Text(email, style: const TextStyle(color: Colors.grey)),
                 ],
               ),
             ],
@@ -144,19 +138,18 @@ class SettingsPage extends StatelessWidget {
           ),
 
           const SizedBox(height: 20),
-        ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.purple, // اللون البنفسجي للخلفية
-    foregroundColor: Colors.white,   // اللون الأبيض للنص
-    padding: const EdgeInsets.symmetric(vertical: 14),
-  ),
-  onPressed: () async {
-    await FirebaseAuth.instance.signOut(); // خروج من Firebase
-    SystemNavigator.pop(); // يغلق التطبيق تماماً
-  },
-  child: const Text("Logout"),
-)
-
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple, // اللون البنفسجي للخلفية
+              foregroundColor: Colors.white, // اللون الأبيض للنص
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut(); // خروج من Firebase
+              SystemNavigator.pop(); // يغلق التطبيق تماماً
+            },
+            child: const Text("Logout"),
+          ),
         ],
       ),
     );
