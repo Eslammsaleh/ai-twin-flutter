@@ -11,7 +11,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _controller = PageController();
   int currentIndex = 0;
-  bool _isLoading = true; // 🔹 لغاية ما نقرأ SharedPreferences
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -28,7 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
 
-    setState(() => _isLoading = false); // UI يشتغل
+    setState(() => _isLoading = false);
   }
 
   void nextPage() async {
@@ -57,65 +57,79 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Image.asset(image, fit: BoxFit.cover),
         ),
         SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 30),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight:
-                        isBoldTitle ? FontWeight.bold : FontWeight.w800,
-                    color: Colors.white,
-                    height: 1.2,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 30),
+
+                  // Title
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 34,
+                      fontWeight:
+                          isBoldTitle ? FontWeight.bold : FontWeight.w800,
+                      color: Colors.white,
+                      height: 1.2,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  subtitle,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    color: Colors.white70,
-                    height: 1.6,
+
+                  const SizedBox(height: 18),
+
+                  // Subtitle
+                  Text(
+                    subtitle,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      color: Colors.white70,
+                      height: 1.6,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: nextPage,
-                  child: Container(
-                    width: 180,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(
-                        color: Colors.purpleAccent,
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.purpleAccent.withOpacity(0.4),
-                          blurRadius: 12,
+
+                  const Spacer(),
+
+                  // Button
+                  Center(
+                    child: GestureDetector(
+                      onTap: nextPage,
+                      child: Container(
+                        width: 180,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                            color: Colors.purpleAccent,
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.purpleAccent.withOpacity(0.4),
+                              blurRadius: 12,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      buttonText,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                        alignment: Alignment.center,
+                        child: Text(
+                          buttonText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 40),
-              ],
+
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
           ),
         ),

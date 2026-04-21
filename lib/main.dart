@@ -107,11 +107,18 @@ class _AIVideoHomeScreenState extends State<AIVideoHomeScreen> {
                   : () async {
                       setState(() => loading = true);
 
-                      final data = await generateVideo("ولد حزين ثم يبتسم");
+                      // ✅ التعديل هنا
+                      final data = await generateVideo(
+                        prompt: "ولد حزين ثم يبتسم",
+                      );
 
                       setState(() {
-                        videoUrl = data["video_url"];
-                        promptText = data["prompt"];
+                        if (data["status"] == "success") {
+                          videoUrl = data["data"]["video_url"];
+                          promptText = data["data"]["prompt"] ?? "";
+                        } else {
+                          print("Error from n8n");
+                        }
                         loading = false;
                       });
                     },
