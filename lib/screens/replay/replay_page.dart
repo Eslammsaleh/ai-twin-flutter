@@ -4,8 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 
 import '../../theme/app_colors.dart';
-
-// ✅ الجديد
 import '../../api.dart';
 import '../../video_widget.dart';
 
@@ -31,7 +29,6 @@ class _ReplayPageState extends State<ReplayPage> {
   String? videoUrl;
   bool loading = false;
 
-  // ✅ الجديد (بدل parseDialogue)
   List<Map<String, dynamic>> buildCharacterScenes(String text) {
     final lines = text.split('\n');
 
@@ -93,9 +90,8 @@ class _ReplayPageState extends State<ReplayPage> {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: "Character Name",
-                  ),
+                  decoration:
+                      const InputDecoration(labelText: "Character Name"),
                 ),
                 const SizedBox(height: 12),
 
@@ -178,10 +174,12 @@ class _ReplayPageState extends State<ReplayPage> {
           Row(
             children: [
               Expanded(
-                child: Text(char.name, style: const TextStyle(fontSize: 16)),
+                child: Text(char.name,
+                    style: const TextStyle(fontSize: 16)),
               ),
               IconButton(
-                onPressed: () => setState(() => characters.removeAt(index)),
+                onPressed: () =>
+                    setState(() => characters.removeAt(index)),
                 icon: const Icon(Icons.delete, color: Colors.red),
               ),
             ],
@@ -200,7 +198,8 @@ class _ReplayPageState extends State<ReplayPage> {
                       ? const Center(child: Text("No Image"))
                       : ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: Image.file(char.image!, fit: BoxFit.cover),
+                          child: Image.file(char.image!,
+                              fit: BoxFit.cover),
                         ),
                 ),
               ),
@@ -230,21 +229,24 @@ class _ReplayPageState extends State<ReplayPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Text to Video"), centerTitle: true),
+      appBar:
+          AppBar(title: const Text("Text to Video"), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
             const Text(
               "Script / Dialogue",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             TextField(
               maxLines: 6,
               controller: scriptController,
               decoration: InputDecoration(
-                hintText: "Your character will speak this text...",
+                hintText:
+                    "Your character will speak this text...",
                 filled: true,
                 fillColor: AppColors.cardBackground,
                 border: OutlineInputBorder(
@@ -256,11 +258,13 @@ class _ReplayPageState extends State<ReplayPage> {
             const SizedBox(height: 25),
 
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment:
+                  MainAxisAlignment.spaceBetween,
               children: [
                 const Text("Characters",
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
                 ElevatedButton.icon(
                   onPressed: showAddCharacterDialog,
                   icon: const Icon(Icons.add),
@@ -279,42 +283,97 @@ class _ReplayPageState extends State<ReplayPage> {
                     : () async {
                         setState(() => loading = true);
 
+                        /// 1️⃣ رفع الشخصيات
+                        List<Map<String, dynamic>> finalCharacters = [];
+
+                        for (var char in characters) {
+                          String? imageUrl;
+                          String? audioUrl;
+
+                          try {
+                            if (char.image != null) {
+                              imageUrl =
+                                  await uploadToCloudinary(char.image!);
+                            }
+                          } catch (e) {
+                            print("Upload image error: $e");
+                          }
+
+                          try {
+                            if (char.voice != null) {
+                              audioUrl =
+                                  await uploadAudio(char.voice!);
+                            }
+                          } catch (e) {
+                            print("Upload audio error: $e");
+                          }
+
+                          finalCharacters.add({
+                            "name": char.name,
+                            "image": imageUrl,
+                            "audio": audioUrl,
+                          });
+                        }
+
+                        /// 2️⃣ تجهيز ورفع dialogues
                         final scenes =
                             buildCharacterScenes(scriptController.text);
 
-                        final data = await generateVideo(
+                        for (var d in scenes) {
+                          try {
+                            if (d["image"] != null) {
+                              d["image"] =
+                                  await uploadToCloudinary(File(d["image"]));
+                            }
+                          } catch (e) {
+                            print("Dialogue image error: $e");
+                          }
+
+                          try {
+                            if (d["audio"] != null) {
+                              d["audio"] =
+                                  await uploadAudio(File(d["audio"]));
+                            }
+                          } catch (e) {
+                            print("Dialogue audio error: $e");
+                          }
+                        }
+
+                        /// 3️⃣ إرسال
+                        final data = await generateVideoWithUrls(
                           prompt: scriptController.text.isEmpty
                               ? "ولد حزين ثم يبتسم"
                               : scriptController.text,
-
-                          charactersData: characters.map((char) {
-                            return {
-                              "name": char.name,
-                              "image": char.image?.path,
-                              "audio": char.voice?.path,
-                            };
-                          }).toList(),
-
+                          characters: finalCharacters,
                           dialogues: scenes,
                         );
 
-                        setState(() {
-                          if (data["status"] == "success") {
-                            videoUrl = data["data"]["video_url"];
-                          } else {
-                            print("Error from n8n");
-                          }
-                          loading = false;
-                        });
+                        /// 4️⃣ polling
+                        if (data["status"] == "processing") {
+                          final id = data["prediction_id"];
+
+                          final url = await waitForVideo(id);
+
+                          setState(() {
+                            videoUrl = url;
+                            loading = false;
+                          });
+                        } else {
+                          print("Error from n8n");
+                          setState(() => loading = false);
+                        }
                       },
-                child: Text(loading ? "Processing..." : "Generate Video"),
+                child: Text(
+                    loading ? "Processing..." : "Generate Video"),
               ),
             ),
 
             const SizedBox(height: 20),
 
             if (videoUrl != null)
-              SizedBox(height: 250, child: VideoWidget(videoUrl: videoUrl!)),
+              SizedBox(
+                  height: 250,
+                  child: VideoWidget(videoUrl: videoUrl!)),
           ],
         ),
       ),
