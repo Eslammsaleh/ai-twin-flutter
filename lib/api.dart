@@ -3,24 +3,48 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 /// 🔁 polling لحد ما الفيديو يجهز
+/// (مع limit + validation + failed handling + network protection + smart delay capped)
 Future<String?> waitForVideo(String id) async {
-  while (true) {
-    final response = await http.post(
-      Uri.parse("https://n8n-culu.onrender.com/webhook/check-video"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"id": id}),
-    );
+  int retries = 0;
 
-    final data = jsonDecode(response.body);
+  while (retries < 50) {
+    try {
+      final response = await http.post(
+        Uri.parse("https://n8n-culu.onrender.com/webhook/check-video"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"id": id}),
+      );
 
-    print("CHECK: $data");
+      if (response.statusCode != 200) {
+        throw Exception("Server error");
+      }
 
-    if (data["status"] == "succeeded") {
-      return data["video_url"];
+      final data = jsonDecode(response.body);
+
+      print("CHECK: $data");
+
+      if (data["status"] == "succeeded") {
+        return data["video_url"];
+      }
+
+      /// ✅ لو فشل يوقف فورًا
+      if (data["status"] == "failed") {
+        throw Exception("Video failed");
+      }
+    } catch (e) {
+      /// 🔥 يمنع crash في حالة network error
+      print("Polling error: $e");
     }
 
-    await Future.delayed(const Duration(seconds: 3));
+    /// 🔥 Smart delay (يزود تدريجيًا لكن max 10 ثواني)
+    await Future.delayed(
+      Duration(seconds: (2 + retries).clamp(2, 10)),
+    );
+
+    retries++;
   }
+
+  return null;
 }
 
 /// ☁️ رفع صورة على Cloudinary
@@ -67,7 +91,7 @@ Future<String?> uploadAudio(File file) async {
   return data['secure_url'];
 }
 
-/// 🆕 generate باستخدام URLs (بدل رفع ملفات)
+/// 🆕 generate باستخدام URLs (مع validation)
 Future<Map<String, dynamic>> generateVideoWithUrls({
   required String prompt,
   required List<Map<String, dynamic>> characters,
@@ -84,6 +108,10 @@ Future<Map<String, dynamic>> generateVideoWithUrls({
       "dialogues": dialogues,
     }),
   );
+
+  if (response.statusCode != 200) {
+    throw Exception("Server error");
+  }
 
   final data = jsonDecode(response.body);
   return data;

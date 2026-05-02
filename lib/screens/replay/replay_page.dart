@@ -28,10 +28,20 @@ class _ReplayPageState extends State<ReplayPage> {
 
   String? videoUrl;
   bool loading = false;
+  bool isCancelled = false;
+
+  final Map<String, String> imageCache = {};
+  final Map<String, String> audioCache = {};
+
+  @override
+  void dispose() {
+    isCancelled = true;
+    scriptController.dispose();
+    super.dispose();
+  }
 
   List<Map<String, dynamic>> buildCharacterScenes(String text) {
     final lines = text.split('\n');
-
     List<Map<String, dynamic>> scenes = [];
 
     for (var line in lines) {
@@ -58,8 +68,8 @@ class _ReplayPageState extends State<ReplayPage> {
   }
 
   Future<File?> pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? file = await picker.pickImage(source: ImageSource.gallery);
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: ImageSource.gallery);
     if (file != null) return File(file.path);
     return null;
   }
@@ -69,14 +79,57 @@ class _ReplayPageState extends State<ReplayPage> {
       type: FileType.custom,
       allowedExtensions: ["mp3", "wav", "ogg"],
     );
+
     if (result != null && result.files.single.path != null) {
       return File(result.files.single.path!);
     }
+
     return null;
   }
 
+  Future<String?> cachedUploadImage(String path) async {
+    if (imageCache.containsKey(path)) return imageCache[path];
+
+    final url = await uploadToCloudinary(File(path));
+
+    if (url == null || url.toString().isEmpty) {
+      throw Exception("Image upload failed");
+    }
+
+    imageCache[path] = url;
+    return url;
+  }
+
+  Future<String?> cachedUploadAudio(String path) async {
+    if (audioCache.containsKey(path)) return audioCache[path];
+
+    final url = await uploadAudio(File(path));
+
+    if (url == null || url.toString().isEmpty) {
+      throw Exception("Audio upload failed");
+    }
+
+    audioCache[path] = url;
+    return url;
+  }
+
+  Future<String?> safeWaitForVideo(String id) async {
+    if (isCancelled) return null;
+
+    final url = await waitForVideo(id);
+
+    if (isCancelled) return null;
+
+    if (url == null || url.toString().isEmpty) {
+      throw Exception("Video URL is empty");
+    }
+
+    return url;
+  }
+
   Future<void> showAddCharacterDialog() async {
-    final TextEditingController nameController = TextEditingController();
+    final nameController = TextEditingController();
+
     File? selectedImage;
     File? selectedVoice;
 
@@ -85,52 +138,49 @@ class _ReplayPageState extends State<ReplayPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text("Add Character"),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration:
-                      const InputDecoration(labelText: "Character Name"),
-                ),
-                const SizedBox(height: 12),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration:
+                    const InputDecoration(labelText: "Character Name"),
+              ),
 
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    File? img = await pickImage();
-                    if (img != null) {
-                      setDialogState(() {
-                        selectedImage = img;
-                      });
-                    }
-                  },
-                  icon: const Icon(Icons.image),
-                  label: Text(
-                    selectedImage == null
-                        ? "Pick Image"
-                        : "Image Selected",
-                  ),
-                ),
-                const SizedBox(height: 8),
+              const SizedBox(height: 12),
 
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    File? voice = await pickVoice();
-                    if (voice != null) {
-                      setDialogState(() {
-                        selectedVoice = voice;
-                      });
-                    }
-                  },
-                  icon: const Icon(Icons.music_note),
-                  label: Text(
-                    selectedVoice == null
-                        ? "Pick Voice"
-                        : "Voice Selected",
-                  ),
+              ElevatedButton(
+                onPressed: () async {
+                  final img = await pickImage();
+
+                  if (img != null) {
+                    setDialogState(() => selectedImage = img);
+                  }
+                },
+                child: Text(
+                  selectedImage == null
+                      ? "Pick Image"
+                      : "Image Selected",
                 ),
-              ],
-            ),
+              ),
+
+              const SizedBox(height: 10),
+
+              ElevatedButton(
+                onPressed: () async {
+                  final voice = await pickVoice();
+
+                  if (voice != null) {
+                    setDialogState(() => selectedVoice = voice);
+                  }
+                },
+                child: Text(
+                  selectedVoice == null
+                      ? "Pick Voice"
+                      : "Voice Selected",
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -149,6 +199,7 @@ class _ReplayPageState extends State<ReplayPage> {
                       ),
                     );
                   });
+
                   Navigator.pop(context);
                 }
               },
@@ -169,55 +220,34 @@ class _ReplayPageState extends State<ReplayPage> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(char.name,
-                    style: const TextStyle(fontSize: 16)),
-              ),
+              Expanded(child: Text(char.name)),
               IconButton(
                 onPressed: () =>
                     setState(() => characters.removeAt(index)),
-                icon: const Icon(Icons.delete, color: Colors.red),
+                icon: const Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: Container(
-                  height: 140,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: char.image == null
-                      ? const Center(child: Text("No Image"))
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.file(char.image!,
-                              fit: BoxFit.cover),
-                        ),
-                ),
+                child: char.image == null
+                    ? const Text("No Image")
+                    : Image.file(char.image!, height: 100),
               ),
-              const SizedBox(width: 12),
               Expanded(
-                child: Container(
-                  height: 140,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: char.voice == null
-                      ? const Center(child: Text("No Voice"))
-                      : const Center(
-                          child: Icon(Icons.check_circle,
-                              color: Colors.green, size: 40),
-                        ),
-                ),
+                child: char.voice == null
+                    ? const Text("No Voice")
+                    : const Icon(
+                        Icons.check,
+                        color: Colors.green,
+                      ),
               ),
             ],
           ),
@@ -226,156 +256,146 @@ class _ReplayPageState extends State<ReplayPage> {
     );
   }
 
+  Future<void> generateVideoNow() async {
+    try {
+      setState(() {
+        loading = true;
+        videoUrl = null;
+      });
+
+      final futures = characters.map((char) async {
+        final charData = {
+          "name": char.name,
+        };
+
+        final img = char.image != null
+            ? await cachedUploadImage(char.image!.path)
+            : null;
+
+        if (img != null) {
+          charData["image"] = img;
+        }
+
+        final audio = char.voice != null
+            ? await cachedUploadAudio(char.voice!.path)
+            : null;
+
+        if (audio != null) {
+          charData["audio"] = audio;
+        }
+
+        return charData;
+      }).toList();
+
+      final finalCharacters = await Future.wait(futures);
+
+      print("FINAL CHARACTERS:");
+      print(finalCharacters);
+
+      final scenes = buildCharacterScenes(scriptController.text);
+
+      final data = await generateVideoWithUrls(
+        prompt: scriptController.text,
+        characters: finalCharacters,
+        dialogues: scenes,
+      );
+
+      if (data["status"] == "processing") {
+        final id = data["id"];
+
+        final url = await safeWaitForVideo(id);
+
+        if (!mounted) return;
+
+        setState(() {
+          videoUrl = url;
+          loading = false;
+        });
+      } else {
+        if (!mounted) return;
+
+        setState(() => loading = false);
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => loading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: $e"),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:
-          AppBar(title: const Text("Text to Video"), centerTitle: true),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            const Text(
-              "Script / Dialogue",
-              style:
-                  TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              maxLines: 6,
-              controller: scriptController,
-              decoration: InputDecoration(
-                hintText:
-                    "Your character will speak this text...",
-                filled: true,
-                fillColor: AppColors.cardBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
+      appBar: AppBar(
+        title: const Text("Text to Video"),
+      ),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: ListView(
               children: [
-                const Text("Characters",
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
-                ElevatedButton.icon(
-                  onPressed: showAddCharacterDialog,
-                  icon: const Icon(Icons.add),
-                  label: const Text("Add Character"),
+                const Text("Script"),
+
+                TextField(
+                  controller: scriptController,
+                  maxLines: 5,
                 ),
+
+                const SizedBox(height: 20),
+
+                Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Characters"),
+                    ElevatedButton(
+                      onPressed: showAddCharacterDialog,
+                      child: const Text("Add Character"),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                ...characters.asMap().entries.map(
+                      (e) => characterCard(
+                        e.value,
+                        e.key,
+                      ),
+                    ),
+
+                const SizedBox(height: 20),
+
+                ElevatedButton(
+                  onPressed: loading ? null : generateVideoNow,
+                  child: Text(
+                    loading
+                        ? "Processing..."
+                        : "Generate Video",
+                  ),
+                ),
+
+                if (videoUrl != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: VideoWidget(videoUrl: videoUrl!),
+                  ),
               ],
             ),
+          ),
 
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: loading
-                    ? null
-                    : () async {
-                        setState(() => loading = true);
-
-                        /// 1️⃣ رفع الشخصيات
-                        List<Map<String, dynamic>> finalCharacters = [];
-
-                        for (var char in characters) {
-                          String? imageUrl;
-                          String? audioUrl;
-
-                          try {
-                            if (char.image != null) {
-                              imageUrl =
-                                  await uploadToCloudinary(char.image!);
-                            }
-                          } catch (e) {
-                            print("Upload image error: $e");
-                          }
-
-                          try {
-                            if (char.voice != null) {
-                              audioUrl =
-                                  await uploadAudio(char.voice!);
-                            }
-                          } catch (e) {
-                            print("Upload audio error: $e");
-                          }
-
-                          finalCharacters.add({
-                            "name": char.name,
-                            "image": imageUrl,
-                            "audio": audioUrl,
-                          });
-                        }
-
-                        /// 2️⃣ تجهيز ورفع dialogues
-                        final scenes =
-                            buildCharacterScenes(scriptController.text);
-
-                        for (var d in scenes) {
-                          try {
-                            if (d["image"] != null) {
-                              d["image"] =
-                                  await uploadToCloudinary(File(d["image"]));
-                            }
-                          } catch (e) {
-                            print("Dialogue image error: $e");
-                          }
-
-                          try {
-                            if (d["audio"] != null) {
-                              d["audio"] =
-                                  await uploadAudio(File(d["audio"]));
-                            }
-                          } catch (e) {
-                            print("Dialogue audio error: $e");
-                          }
-                        }
-
-                        /// 3️⃣ إرسال
-                        final data = await generateVideoWithUrls(
-                          prompt: scriptController.text.isEmpty
-                              ? "ولد حزين ثم يبتسم"
-                              : scriptController.text,
-                          characters: finalCharacters,
-                          dialogues: scenes,
-                        );
-
-                        /// 4️⃣ polling
-                        if (data["status"] == "processing") {
-                          final id = data["prediction_id"];
-
-                          final url = await waitForVideo(id);
-
-                          setState(() {
-                            videoUrl = url;
-                            loading = false;
-                          });
-                        } else {
-                          print("Error from n8n");
-                          setState(() => loading = false);
-                        }
-                      },
-                child: Text(
-                    loading ? "Processing..." : "Generate Video"),
-              ),
+          if (loading)
+            const Center(
+              child: CircularProgressIndicator(),
             ),
-
-            const SizedBox(height: 20),
-
-            if (videoUrl != null)
-              SizedBox(
-                  height: 250,
-                  child: VideoWidget(videoUrl: videoUrl!)),
-          ],
-        ),
+        ],
       ),
     );
   }
