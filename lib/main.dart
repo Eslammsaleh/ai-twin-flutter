@@ -1,30 +1,25 @@
+
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 import 'firebase_options.dart';
 
-// Theme & Providers
+/// Theme & Providers
+import 'providers/twin_provider.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
-import 'providers/twin_provider.dart';
 
-// Screens
-import 'screens/settings/settings_page.dart';
-import 'screens/chat/chat_page.dart';
-import 'screens/replay/replay_page.dart';
-import 'screens/timeline/timeline_page.dart';
-import 'screens/splash/splash_screen.dart';
-import 'screens/onboarding/onboarding_screen.dart';
-
-// Auth
+/// Screens
 import 'screens/auth/auth_gate.dart';
 import 'screens/auth/sign_in_page.dart';
 import 'screens/auth/sign_up_page.dart';
-
-// NEW: AI Video Integration
-import 'api.dart';
-import 'video_widget.dart';
+import 'screens/chat/chat_page.dart';
+import 'screens/onboarding/onboarding_screen.dart';
+import 'screens/replay/replay_page.dart';
+import 'screens/settings/settings_page.dart';
+import 'screens/splash/splash_screen.dart';
+import 'screens/timeline/timeline_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,8 +31,12 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => TwinProvider()),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => TwinProvider(),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -49,97 +48,58 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
+    final themeProvider =
+        context.watch<ThemeProvider>();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+
       title: 'LifeTwin',
+
+      /// Themes
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
+      themeMode: themeProvider.isDark
+          ? ThemeMode.dark
+          : ThemeMode.light,
+
+      /// Initial Route
       initialRoute: '/splash',
+
+      /// Routes
       routes: {
-        '/splash': (context) => const SplashScreen(),
-        '/onboarding': (context) => const OnboardingScreen(),
+        '/splash': (context) =>
+            const SplashScreen(),
 
-        // Auth
-        '/auth': (context) => const AuthGate(),
-        '/signin': (context) => const SignInPage(),
-        '/signup': (context) => const SignUpPage(),
+        '/onboarding': (context) =>
+            const OnboardingScreen(),
 
-        // App
-        '/home': (context) => const AIVideoHomeScreen(),
-        '/chat': (context) => const ChatPage(),
-        '/timeline': (context) => const TimelinePage(),
-        '/replay': (context) => const ReplayPage(),
-        '/settings': (context) => const SettingsPage(),
+        /// Auth
+        '/auth': (context) =>
+            const AuthGate(),
+
+        '/signin': (context) =>
+            const SignInPage(),
+
+        '/signup': (context) =>
+            const SignUpPage(),
+
+        /// Main App
+        '/home': (context) =>
+            const ReplayPage(),
+
+        '/chat': (context) =>
+            const ChatPage(),
+
+        '/timeline': (context) =>
+            const TimelinePage(),
+
+        '/replay': (context) =>
+            const ReplayPage(),
+
+        '/settings': (context) =>
+            const SettingsPage(),
       },
-    );
-  }
-}
-
-//
-// 🔥 NEW HOME SCREEN (AI VIDEO GENERATOR SCREEN)
-//
-class AIVideoHomeScreen extends StatefulWidget {
-  const AIVideoHomeScreen({super.key});
-
-  @override
-  State<AIVideoHomeScreen> createState() => _AIVideoHomeScreenState();
-}
-
-class _AIVideoHomeScreenState extends State<AIVideoHomeScreen> {
-  String? videoUrl;
-  String? promptText;
-  bool loading = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("AI Video Generator")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            ElevatedButton(
-              onPressed: loading
-                  ? null
-                  : () async {
-                      setState(() => loading = true);
-
-                      // ✅ التعديل هنا
-                      final data = await generateVideo(
-                        prompt: "ولد حزين ثم يبتسم",
-                      );
-
-                      setState(() {
-                        if (data["status"] == "success") {
-                          videoUrl = data["data"]["video_url"];
-                          promptText = data["data"]["prompt"] ?? "";
-                        } else {
-                          print("Error from n8n");
-                        }
-                        loading = false;
-                      });
-                    },
-              child: Text(loading ? "Processing..." : "Generate Video"),
-            ),
-
-            const SizedBox(height: 20),
-
-            if (promptText != null)
-              Text(
-                promptText!,
-                style: const TextStyle(fontSize: 16),
-              ),
-
-            const SizedBox(height: 20),
-
-            if (videoUrl != null)
-              Expanded(child: VideoWidget(videoUrl: videoUrl!)),
-          ],
-        ),
-      ),
     );
   }
 }
