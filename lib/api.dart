@@ -1,378 +1,381 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-/// ===============================
-/// 🌐 API URLs
-/// ===============================
-const String generateVideoUrl =
-    "https://n8n-culu.onrender.com/webhook/generate-video";
+/// ===================================
+/// 🌐 N8N WEBHOOK
+/// ===================================
 
-const String checkStatusUrl =
-    "https://n8n-culu.onrender.com/webhook/check_status_webhook";
+const String webhookUrl =
+    "https://n8n-culu.onrender.com/webhook/generate-veo-video";
 
-const String mergeMovieUrl =
-    "https://n8n-culu.onrender.com/webhook/merge-movie";
-
-const String generateVoicesUrl =
-    "https://n8n-culu.onrender.com/webhook/generate-voices";
-
-/// ===============================
+/// ===================================
 /// ☁️ CLOUDINARY
-/// ===============================
+/// ===================================
+
 const String cloudName =
     "dfyyydlmk";
 
 const String uploadPreset =
     "life_twin";
 
-/// ===============================
-/// ☁️ Upload Image
-/// ===============================
-Future<String?> uploadImage(
-  File file,
-) async {
-  try {
-    final url = Uri.parse(
-      "https://api.cloudinary.com/v1_1/$cloudName/image/upload",
-    );
+/// ===================================
+/// 🌐 API SERVICE
+/// ===================================
 
-    var request =
-        http.MultipartRequest(
-      'POST',
-      url,
-    );
+class ApiService {
 
-    request.fields['upload_preset'] =
-        uploadPreset;
+  /// ===================================
+  /// 🌐 COMMON POST
+  /// ===================================
 
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'file',
-        file.path,
-      ),
-    );
+  static Future<Map<String, dynamic>?>
+  postJson({
 
-    var response =
-        await request.send();
+    required String url,
 
-    var body =
-        await response.stream
-            .bytesToString();
+    required Map<String, dynamic>
+    body,
 
-    print(
-      "UPLOAD IMAGE RESPONSE:",
-    );
+    int timeoutMinutes = 30,
 
-    print(body);
+    int retries = 3,
 
-    if (body.isEmpty) {
-      throw Exception(
-        "Empty image upload response",
-      );
+  }) async {
+
+    for (int attempt = 0;
+        attempt < retries;
+        attempt++) {
+
+      try {
+
+        print(
+          "=================================",
+        );
+
+        print(
+          "POST ATTEMPT => ${attempt + 1}",
+        );
+
+        print("URL => $url");
+
+        print(
+          "REQUEST BODY => ${jsonEncode(body)}",
+        );
+
+        final response =
+            await http
+                .post(
+
+                  Uri.parse(url),
+
+                  headers: {
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Accept":
+                        "application/json",
+                  },
+
+                  body:
+                      jsonEncode(body),
+
+                )
+                .timeout(
+
+                  Duration(
+                    minutes:
+                        timeoutMinutes,
+                  ),
+                );
+
+        print(
+          "STATUS => ${response.statusCode}",
+        );
+
+        print(
+          "RESPONSE => ${response.body}",
+        );
+
+        print(
+          "=================================",
+        );
+
+        /// EMPTY
+
+        if (response.body.isEmpty) {
+
+          throw Exception(
+            "Empty response body",
+          );
+        }
+
+        /// DECODE
+
+        final data =
+            jsonDecode(response.body);
+
+        /// SUCCESS
+
+        if (response.statusCode ==
+            200) {
+
+          return data;
+        }
+
+        /// ERROR
+
+        throw Exception(
+          "HTTP ${response.statusCode}",
+        );
+
+      } catch (e) {
+
+        print(
+          "POST ERROR => $e",
+        );
+
+        /// LAST RETRY
+
+        if (attempt ==
+            retries - 1) {
+
+          return null;
+        }
+
+        /// WAIT BEFORE RETRY
+
+        await Future.delayed(
+          Duration(
+            seconds:
+                2 + attempt,
+          ),
+        );
+      }
     }
-
-    final data = jsonDecode(body);
-
-    return data["secure_url"];
-  } catch (e) {
-    print(
-      "UPLOAD IMAGE ERROR: $e",
-    );
 
     return null;
   }
-}
 
-/// ===============================
-/// ☁️ Upload Audio
-/// ===============================
-Future<String?> uploadAudio(
-  File file,
-) async {
-  try {
-    final url = Uri.parse(
-      "https://api.cloudinary.com/v1_1/$cloudName/video/upload",
-    );
+  /// ===================================
+  /// ☁️ COMMON CLOUDINARY UPLOAD
+  /// ===================================
 
-    var request =
-        http.MultipartRequest(
-      'POST',
-      url,
-    );
+  static Future<String?> uploadFile({
 
-    request.fields['upload_preset'] =
-        uploadPreset;
+    required File file,
 
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'file',
-        file.path,
-      ),
-    );
+    required String resourceType,
 
-    var response =
-        await request.send();
+  }) async {
 
-    var body =
-        await response.stream
-            .bytesToString();
+    try {
 
-    print(
-      "UPLOAD AUDIO RESPONSE:",
-    );
-
-    print(body);
-
-    if (body.isEmpty) {
-      throw Exception(
-        "Empty audio upload response",
+      print(
+        "=================================",
       );
+
+      print(
+        "UPLOADING FILE => ${file.path}",
+      );
+
+      final request =
+          http.MultipartRequest(
+
+            'POST',
+
+            Uri.parse(
+
+              "https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload",
+
+            ),
+          );
+
+      /// PRESET
+
+      request.fields['upload_preset'] =
+          uploadPreset;
+
+      /// FILE
+
+      request.files.add(
+
+        await http.MultipartFile
+            .fromPath(
+
+              'file',
+
+              file.path,
+
+            ),
+      );
+
+      /// SEND
+
+      final response =
+          await request.send();
+
+      /// BODY
+
+      final body =
+          await response.stream
+              .bytesToString();
+
+      print(
+        "UPLOAD RESPONSE => $body",
+      );
+
+      final data =
+          jsonDecode(body);
+
+      /// SUCCESS
+
+      if (response.statusCode ==
+              200 ||
+          response.statusCode ==
+              201) {
+
+        return data["secure_url"];
+      }
+
+      throw Exception(
+        "Upload failed",
+      );
+
+    } catch (e) {
+
+      print(
+        "UPLOAD ERROR => $e",
+      );
+
+      return null;
     }
-
-    final data = jsonDecode(body);
-
-    return data["secure_url"];
-  } catch (e) {
-    print(
-      "UPLOAD AUDIO ERROR: $e",
-    );
-
-    return null;
   }
-}
 
-/// ===============================
-/// 🎬 GENERATE VIDEO TASKS
-/// ===============================
-Future<Map<String, dynamic>>
-    generateVideoTasks({
-  required List<dynamic>
-      conversation,
-  required List<dynamic>
-      characters,
-}) async {
-  try {
-    final response = await http
-        .post(
-      Uri.parse(
-        generateVideoUrl,
-      ),
-      headers: {
-        "Content-Type":
-            "application/json",
-      },
-      body: jsonEncode({
-        "conversation":
-            conversation,
-        "characters":
-            characters,
-      }),
-    )
-        .timeout(
-      const Duration(
-        minutes: 5,
-      ),
+  /// ===================================
+  /// ☁️ IMAGE UPLOAD
+  /// ===================================
+
+  static Future<String?>
+  uploadImage(
+    File file,
+  ) async {
+
+    return await uploadFile(
+
+      file: file,
+
+      resourceType:
+          "image",
     );
-
-    print(
-      "GENERATE VIDEO STATUS: ${response.statusCode}",
-    );
-
-    print(
-      "GENERATE VIDEO BODY:",
-    );
-
-    print(response.body);
-
-    if (response.body.isEmpty) {
-      throw Exception(
-        "Server returned empty response",
-      );
-    }
-
-    return jsonDecode(
-      response.body,
-    );
-  } catch (e) {
-    print(
-      "GENERATE VIDEO ERROR: $e",
-    );
-
-    rethrow;
   }
-}
 
-/// ===============================
-/// ⏳ CHECK STATUS
-/// ===============================
-Future<Map<String, dynamic>>
-    checkStatus({
-  required List<dynamic> tasks,
-}) async {
-  try {
-    final response = await http
-        .post(
-      Uri.parse(
-        checkStatusUrl,
-      ),
-      headers: {
-        "Content-Type":
-            "application/json",
-      },
-      body: jsonEncode({
-        "tasks": tasks,
-      }),
-    )
-        .timeout(
-      const Duration(
-        minutes: 5,
-      ),
+  /// ===================================
+  /// ☁️ AUDIO UPLOAD
+  /// ===================================
+
+  static Future<String?>
+  uploadAudio(
+    File file,
+  ) async {
+
+    return await uploadFile(
+
+      file: file,
+
+      resourceType:
+          "video",
     );
-
-    print(
-      "CHECK STATUS CODE: ${response.statusCode}",
-    );
-
-    print(
-      "CHECK STATUS BODY:",
-    );
-
-    print(response.body);
-
-    if (response.body.isEmpty) {
-      throw Exception(
-        "Empty check status response",
-      );
-    }
-
-    return jsonDecode(
-      response.body,
-    );
-  } catch (e) {
-    print(
-      "CHECK STATUS ERROR: $e",
-    );
-
-    rethrow;
   }
-}
 
-/// ===============================
-/// 🎤 GENERATE VOICES
-/// ===============================
-Future<Map<String, dynamic>>
-    generateVoices({
-  required List<dynamic>
-      conversation,
-  required List<dynamic>
-      characters,
-}) async {
-  try {
-    final response = await http
-        .post(
-      Uri.parse(
-        generateVoicesUrl,
-      ),
-      headers: {
-        "Content-Type":
-            "application/json",
-      },
-      body: jsonEncode({
-        "conversation":
-            conversation,
-        "characters":
-            characters,
-      }),
-    )
-        .timeout(
-      const Duration(
-        minutes: 5,
-      ),
-    );
+  /// ===================================
+  /// 🎬 GENERATE SCENE
+  /// ===================================
+
+  static Future<Map<String, dynamic>?>
+  generateScene({
+
+    required String prompt,
+
+    required String background,
+
+    required String style,
+
+    required List<Map<String, dynamic>>
+    characters,
+
+    String language =
+        "English",
+
+  }) async {
+
+    final body = {
+
+      "prompt":
+          prompt.trim(),
+
+      "background":
+          background.trim(),
+
+      "style":
+          style.trim(),
+
+      "language":
+          language,
+
+      "characters":
+          characters,
+    };
 
     print(
-      "GENERATE VOICES CODE: ${response.statusCode}",
+      "FINAL GENERATE BODY => ${jsonEncode(body)}",
     );
+
+    final result =
+        await postJson(
+
+      url: webhookUrl,
+
+      body: body,
+
+      timeoutMinutes: 30,
+
+      retries: 3,
+    );
+
+    /// VALIDATE RESULT
+
+    if (result == null) {
+
+      print(
+        "NULL RESULT FROM BACKEND",
+      );
+
+      return null;
+    }
+
+    /// DEBUG
 
     print(
-      "GENERATE VOICES BODY:",
+      "FINAL RESULT => $result",
     );
 
-    print(response.body);
+    /// CHECK VIDEO
 
-    if (response.body.isEmpty) {
-      throw Exception(
-        "Empty voices response",
+    if (result["video_url"] ==
+            null ||
+        result["video_url"]
+            .toString()
+            .isEmpty) {
+
+      print(
+        "WARNING => VIDEO URL EMPTY",
       );
     }
 
-    return jsonDecode(
-      response.body,
-    );
-  } catch (e) {
-    print(
-      "GENERATE VOICES ERROR: $e",
-    );
-
-    rethrow;
-  }
-}
-
-/// ===============================
-/// 🎞 MERGE MOVIE
-/// ===============================
-Future<Map<String, dynamic>>
-    mergeMovie({
-  required List<dynamic> videos,
-  required List<dynamic> audios,
-}) async {
-  try {
-    final response = await http
-        .post(
-      Uri.parse(
-        mergeMovieUrl,
-      ),
-      headers: {
-        "Content-Type":
-            "application/json",
-      },
-      body: jsonEncode({
-        "videos": videos,
-        "audios": audios,
-      }),
-    )
-        .timeout(
-      const Duration(
-        minutes: 10,
-      ),
-    );
-
-    print(
-      "MERGE MOVIE CODE: ${response.statusCode}",
-    );
-
-    print(
-      "MERGE MOVIE BODY:",
-    );
-
-    print(response.body);
-
-    if (response.body.isEmpty) {
-      throw Exception(
-        "Empty merge movie response",
-      );
-    }
-
-    return jsonDecode(
-      response.body,
-    );
-  } catch (e) {
-    print(
-      "MERGE MOVIE ERROR: $e",
-    );
-
-    rethrow;
+    return result;
   }
 }

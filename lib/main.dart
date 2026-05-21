@@ -1,41 +1,54 @@
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 
-/// Theme & Providers
+/// Providers
 import 'providers/twin_provider.dart';
-import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
+
+/// Theme
+import 'theme/app_theme.dart';
 
 /// Screens
 import 'screens/auth/auth_gate.dart';
 import 'screens/auth/sign_in_page.dart';
 import 'screens/auth/sign_up_page.dart';
+
 import 'screens/chat/chat_page.dart';
+
 import 'screens/onboarding/onboarding_screen.dart';
+
 import 'screens/replay/replay_page.dart';
+
 import 'screens/settings/settings_page.dart';
+
 import 'screens/splash/splash_screen.dart';
+
 import 'screens/timeline/timeline_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+    options:
+        DefaultFirebaseOptions
+            .currentPlatform,
   );
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => ThemeProvider(),
+          create:
+              (_) =>
+                  ThemeProvider(),
         ),
+
         ChangeNotifierProvider(
-          create: (_) => TwinProvider(),
+          create:
+              (_) => TwinProvider(),
         ),
       ],
       child: const MyApp(),
@@ -44,61 +57,79 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     final themeProvider =
-        context.watch<ThemeProvider>();
+        context.watch<
+          ThemeProvider
+        >();
 
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner:
+          false,
 
       title: 'LifeTwin',
 
-      /// Themes
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeProvider.isDark
-          ? ThemeMode.dark
-          : ThemeMode.light,
+      theme:
+          AppTheme.lightTheme,
 
-      /// Initial Route
-      initialRoute: '/splash',
+      darkTheme:
+          AppTheme.darkTheme,
 
-      /// Routes
+      themeMode:
+          themeProvider.isDark
+              ? ThemeMode.dark
+              : ThemeMode.light,
+
+      initialRoute:
+          '/splash',
+
       routes: {
-        '/splash': (context) =>
-            const SplashScreen(),
+        '/splash':
+            (context) =>
+                const SplashScreen(),
 
-        '/onboarding': (context) =>
-            const OnboardingScreen(),
+        '/onboarding':
+            (context) =>
+                const OnboardingScreen(),
 
-        /// Auth
-        '/auth': (context) =>
-            const AuthGate(),
+        '/auth':
+            (context) =>
+                const AuthGate(),
 
-        '/signin': (context) =>
-            const SignInPage(),
+        '/signin':
+            (context) =>
+                const SignInPage(),
 
-        '/signup': (context) =>
-            const SignUpPage(),
+        '/signup':
+            (context) =>
+                const SignUpPage(),
 
-        /// Main App
-        '/home': (context) =>
-            const ReplayPage(),
+        '/home':
+            (context) =>
+                const ReplayPage(),
 
-        '/chat': (context) =>
-            const ChatPage(),
+        '/chat':
+            (context) =>
+                const ChatPage(),
 
-        '/timeline': (context) =>
-            const TimelinePage(),
+        '/timeline':
+            (context) =>
+                const TimelinePage(),
 
-        '/replay': (context) =>
-            const ReplayPage(),
+        '/replay':
+            (context) =>
+                const ReplayPage(),
 
-        '/settings': (context) =>
-            const SettingsPage(),
+        '/settings':
+            (context) =>
+                const SettingsPage(),
       },
     );
   }
