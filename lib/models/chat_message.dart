@@ -1,13 +1,29 @@
 class ChatMessage {
-  final String? text;       // Nullable عشان لو الصورة فقط
-  final String? imagePath;  // Nullable عشان لو النص فقط
+
+  final String? text;
+
   final bool isUser;
+
   final DateTime time;
 
+  final String type;
+
+  final List<dynamic>? options;
+
+  final List<dynamic>? tips;
+
   ChatMessage({
-    this.text,
-    this.imagePath,
+
+    required this.text,
+
     required this.isUser,
+
     required this.time,
+
+    required this.type,
+
+    this.options,
+
+    this.tips,
   });
 }
