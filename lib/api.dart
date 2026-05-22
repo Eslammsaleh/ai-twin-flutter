@@ -41,7 +41,7 @@ class ApiService {
 
     int timeoutMinutes = 30,
 
-    int retries = 3,
+    int retries = 1,
 
   }) async {
 
@@ -104,8 +104,6 @@ class ApiService {
           "=================================",
         );
 
-        /// EMPTY
-
         if (response.body.isEmpty) {
 
           throw Exception(
@@ -113,20 +111,14 @@ class ApiService {
           );
         }
 
-        /// DECODE
-
         final data =
             jsonDecode(response.body);
-
-        /// SUCCESS
 
         if (response.statusCode ==
             200) {
 
           return data;
         }
-
-        /// ERROR
 
         throw Exception(
           "HTTP ${response.statusCode}",
@@ -138,20 +130,16 @@ class ApiService {
           "POST ERROR => $e",
         );
 
-        /// LAST RETRY
-
         if (attempt ==
             retries - 1) {
 
           return null;
         }
 
-        /// WAIT BEFORE RETRY
-
         await Future.delayed(
           Duration(
             seconds:
-                2 + attempt,
+                2,
           ),
         );
       }
@@ -194,12 +182,8 @@ class ApiService {
             ),
           );
 
-      /// PRESET
-
       request.fields['upload_preset'] =
           uploadPreset;
-
-      /// FILE
 
       request.files.add(
 
@@ -213,12 +197,8 @@ class ApiService {
             ),
       );
 
-      /// SEND
-
       final response =
           await request.send();
-
-      /// BODY
 
       final body =
           await response.stream
@@ -230,8 +210,6 @@ class ApiService {
 
       final data =
           jsonDecode(body);
-
-      /// SUCCESS
 
       if (response.statusCode ==
               200 ||
@@ -343,10 +321,8 @@ class ApiService {
 
       timeoutMinutes: 30,
 
-      retries: 3,
+      retries: 1,
     );
-
-    /// VALIDATE RESULT
 
     if (result == null) {
 
@@ -357,13 +333,9 @@ class ApiService {
       return null;
     }
 
-    /// DEBUG
-
     print(
       "FINAL RESULT => $result",
     );
-
-    /// CHECK VIDEO
 
     if (result["video_url"] ==
             null ||

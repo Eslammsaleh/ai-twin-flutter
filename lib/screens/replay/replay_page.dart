@@ -12,6 +12,7 @@ import '../../api.dart';
 /// =======================================
 
 class CharacterData {
+
   String name;
 
   String gender;
@@ -23,10 +24,15 @@ class CharacterData {
   File? voice;
 
   CharacterData({
+
     required this.name,
+
     required this.gender,
+
     required this.appearance,
+
     this.image,
+
     this.voice,
   });
 }
@@ -36,6 +42,7 @@ class CharacterData {
 /// =======================================
 
 class ReplayPage extends StatefulWidget {
+
   const ReplayPage({
     super.key,
   });
@@ -47,34 +54,32 @@ class ReplayPage extends StatefulWidget {
 
 class _ReplayPageState
     extends State<ReplayPage> {
-  /// =========================
+
+  /// =====================================
   /// CHARACTERS
-  /// =========================
+  /// =====================================
 
   final List<CharacterData>
       characters = [];
 
-  /// =========================
+  /// =====================================
   /// CONTROLLERS
-  /// =========================
+  /// =====================================
 
   final TextEditingController
       scenePromptController =
-      TextEditingController(
-    text:
-        "Two university friends walk slowly through a modern university campus during sunset while talking emotionally. Students move naturally in the background, trees move softly with the wind, cinematic camera tracking shot, realistic body movement, emotional facial expressions, Hollywood cinematic realism, ultra realistic motion and lighting.",
-  );
+      TextEditingController();
 
   final TextEditingController
       backgroundController =
       TextEditingController(
     text:
-        "Modern cinematic university campus",
+        "Modern cinematic background",
   );
 
-  /// =========================
+  /// =====================================
   /// STATES
-  /// =========================
+  /// =====================================
 
   bool loading = false;
 
@@ -85,9 +90,9 @@ class _ReplayPageState
   VideoPlayerController?
   videoController;
 
-  /// =========================
+  /// =====================================
   /// CACHE
-  /// =========================
+  /// =====================================
 
   final Map<String, String>
       imageCache = {};
@@ -95,26 +100,30 @@ class _ReplayPageState
   final Map<String, String>
       audioCache = {};
 
+  /// =====================================
+  /// DISPOSE
+  /// =====================================
+
   @override
   void dispose() {
+
     scenePromptController.dispose();
 
     backgroundController.dispose();
-
-    videoController?.pause();
 
     videoController?.dispose();
 
     super.dispose();
   }
 
-  /// =========================
-  /// LOADING
-  /// =========================
+  /// =====================================
+  /// UPDATE LOADING
+  /// =====================================
 
   void updateLoading(
     String text,
   ) {
+
     if (!mounted) return;
 
     setState(() {
@@ -122,17 +131,20 @@ class _ReplayPageState
     });
   }
 
-  /// =========================
-  /// IMAGE PICKER
-  /// =========================
+  /// =====================================
+  /// PICK IMAGE
+  /// =====================================
 
   Future<File?> pickImage() async {
+
     final picker = ImagePicker();
 
     final file =
         await picker.pickImage(
+
       source:
           ImageSource.gallery,
+
       imageQuality: 90,
     );
 
@@ -143,11 +155,12 @@ class _ReplayPageState
     return File(file.path);
   }
 
-  /// =========================
-  /// AUDIO PICKER
-  /// =========================
+  /// =====================================
+  /// PICK AUDIO
+  /// =====================================
 
   Future<File?> pickAudio() async {
+
     final result =
         await FilePicker.platform.pickFiles(
       type: FileType.audio,
@@ -162,14 +175,16 @@ class _ReplayPageState
     );
   }
 
-  /// =========================
+  /// =====================================
   /// IMAGE CACHE
-  /// =========================
+  /// =====================================
 
   Future<String?> cachedUploadImage(
     String path,
   ) async {
+
     if (imageCache.containsKey(path)) {
+
       return imageCache[path];
     }
 
@@ -187,14 +202,16 @@ class _ReplayPageState
     return url;
   }
 
-  /// =========================
+  /// =====================================
   /// AUDIO CACHE
-  /// =========================
+  /// =====================================
 
   Future<String?> cachedUploadAudio(
     String path,
   ) async {
+
     if (audioCache.containsKey(path)) {
+
       return audioCache[path];
     }
 
@@ -212,9 +229,9 @@ class _ReplayPageState
     return url;
   }
 
-  /// =========================
-  /// VIDEO INIT
-  /// =========================
+  /// =====================================
+  /// INIT VIDEO
+  /// =====================================
 
   Future<void> initVideo(
     String url,
@@ -233,22 +250,13 @@ class _ReplayPageState
           .initialize();
 
       await videoController!
-          .setVolume(1.0);
-
-      await videoController!
           .setLooping(true);
 
       await videoController!
+          .setVolume(1);
+
+      await videoController!
           .play();
-
-      /// VERY IMPORTANT
-      await Future.delayed(
-        const Duration(
-          milliseconds: 300,
-        ),
-      );
-
-      /// AUTO RECOVERY + REPAINT
 
       videoController!
           .addListener(() async {
@@ -282,16 +290,22 @@ class _ReplayPageState
     }
   }
 
-  /// =========================
+  /// =====================================
   /// GENERATE MOVIE
-  /// =========================
+  /// =====================================
 
   Future<void>
       generateMovieNow() async {
 
+    /// 🚫 PREVENT MULTIPLE RUNS
+
+    if (loading) return;
+
     try {
 
+      /// =========================
       /// VALIDATION
+      /// =========================
 
       if (characters.isEmpty) {
 
@@ -309,6 +323,10 @@ class _ReplayPageState
         );
       }
 
+      /// =========================
+      /// START LOADING
+      /// =========================
+
       setState(() {
 
         loading = true;
@@ -320,9 +338,9 @@ class _ReplayPageState
         "Uploading characters...",
       );
 
-      /// =====================
+      /// =========================
       /// CHARACTERS
-      /// =====================
+      /// =========================
 
       List<Map<String, dynamic>>
           finalCharacters = [];
@@ -358,7 +376,10 @@ class _ReplayPageState
           );
         }
 
-        if (imageUrl == null) {
+        if (imageUrl == null ||
+            imageUrl
+                .trim()
+                .isEmpty) {
 
           throw Exception(
             "Character image upload failed",
@@ -384,9 +405,9 @@ class _ReplayPageState
         });
       }
 
-      /// =====================
+      /// =========================
       /// GENERATE
-      /// =====================
+      /// =========================
 
       updateLoading(
         "Generating cinematic AI video...",
@@ -411,12 +432,20 @@ class _ReplayPageState
 
       print(result);
 
+      /// =========================
+      /// NULL RESPONSE
+      /// =========================
+
       if (result == null) {
 
         throw Exception(
           "No response from backend",
         );
       }
+
+      /// =========================
+      /// FAILED
+      /// =========================
 
       if (result["success"] !=
           true) {
@@ -425,6 +454,10 @@ class _ReplayPageState
           "Generation failed",
         );
       }
+
+      /// =========================
+      /// VIDEO URL
+      /// =========================
 
       final videoUrl =
           result["video_url"];
@@ -439,9 +472,9 @@ class _ReplayPageState
         );
       }
 
-      /// =====================
+      /// =========================
       /// DIALOGUES
-      /// =====================
+      /// =========================
 
       String dialoguesText = "";
 
@@ -460,9 +493,9 @@ class _ReplayPageState
         }
       }
 
-      /// =====================
-      /// VIDEO
-      /// =====================
+      /// =========================
+      /// INIT VIDEO
+      /// =========================
 
       updateLoading(
         "Preparing cinematic replay...",
@@ -470,9 +503,11 @@ class _ReplayPageState
 
       await initVideo(videoUrl);
 
-      /// =====================
-      /// UI
-      /// =====================
+      /// =========================
+      /// FINISH
+      /// =========================
+
+      if (!mounted) return;
 
       setState(() {
 
@@ -485,6 +520,12 @@ class _ReplayPageState
       });
 
     } catch (e) {
+
+      print(
+        "GENERATE ERROR => $e",
+      );
+
+      if (!mounted) return;
 
       setState(() {
 
@@ -506,12 +547,21 @@ class _ReplayPageState
           ),
         ),
       );
+
+    } finally {
+
+      if (mounted) {
+
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
-  /// =========================
+  /// =====================================
   /// ADD CHARACTER
-  /// =========================
+  /// =====================================
 
   Future<void>
       showAddCharacterDialog() async {
@@ -543,14 +593,6 @@ class _ReplayPageState
 
           return AlertDialog(
 
-            shape:
-                RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(
-                20,
-              ),
-            ),
-
             title: const Text(
               "Add Character",
             ),
@@ -575,14 +617,11 @@ class _ReplayPageState
 
                       labelText:
                           "Character Name",
-
-                      border:
-                          OutlineInputBorder(),
                     ),
                   ),
 
                   const SizedBox(
-                    height: 20,
+                    height: 15,
                   ),
 
                   DropdownButtonFormField<
@@ -590,21 +629,10 @@ class _ReplayPageState
 
                     value: gender,
 
-                    decoration:
-                        const InputDecoration(
-
-                      labelText:
-                          "Gender",
-
-                      border:
-                          OutlineInputBorder(),
-                    ),
-
                     items: const [
 
                       DropdownMenuItem(
                         value: "male",
-
                         child: Text(
                           "Male",
                         ),
@@ -613,7 +641,6 @@ class _ReplayPageState
                       DropdownMenuItem(
                         value:
                             "female",
-
                         child: Text(
                           "Female",
                         ),
@@ -633,7 +660,7 @@ class _ReplayPageState
                   ),
 
                   const SizedBox(
-                    height: 20,
+                    height: 15,
                   ),
 
                   TextField(
@@ -647,21 +674,15 @@ class _ReplayPageState
                         const InputDecoration(
 
                       labelText:
-                          "Character Appearance",
-
-                      hintText:
-                          "Optional but improves realism significantly",
-
-                      border:
-                          OutlineInputBorder(),
+                          "Appearance",
                     ),
                   ),
 
                   const SizedBox(
-                    height: 20,
+                    height: 15,
                   ),
 
-                  ElevatedButton.icon(
+                  ElevatedButton(
 
                     onPressed:
                         () async {
@@ -679,25 +700,21 @@ class _ReplayPageState
                       }
                     },
 
-                    icon: const Icon(
-                      Icons.image,
-                    ),
-
-                    label: Text(
+                    child: Text(
 
                       selectedImage != null
 
                           ? "Image Selected ✔"
 
-                          : "Pick Character Image",
+                          : "Pick Image",
                     ),
                   ),
 
                   const SizedBox(
-                    height: 15,
+                    height: 10,
                   ),
 
-                  ElevatedButton.icon(
+                  ElevatedButton(
 
                     onPressed:
                         () async {
@@ -715,17 +732,13 @@ class _ReplayPageState
                       }
                     },
 
-                    icon: const Icon(
-                      Icons.mic,
-                    ),
-
-                    label: Text(
+                    child: Text(
 
                       selectedVoice != null
 
                           ? "Voice Selected ✔"
 
-                          : "Pick Voice (Optional)",
+                          : "Pick Voice",
                     ),
                   ),
                 ],
@@ -779,7 +792,7 @@ class _ReplayPageState
                 },
 
                 child: const Text(
-                  "Add Character",
+                  "Add",
                 ),
               ),
             ],
@@ -789,9 +802,9 @@ class _ReplayPageState
     );
   }
 
-  /// =========================
+  /// =====================================
   /// CHARACTER CARD
-  /// =========================
+  /// =====================================
 
   Widget characterCard(
     CharacterData char,
@@ -800,465 +813,69 @@ class _ReplayPageState
 
     return Card(
 
-      elevation: 8,
-
       margin:
           const EdgeInsets.only(
         bottom: 14,
       ),
 
-      shape:
-          RoundedRectangleBorder(
+      child: ListTile(
 
-        borderRadius:
-            BorderRadius.circular(
-          22,
-        ),
-      ),
-
-      child: Padding(
-
-        padding:
-            const EdgeInsets.all(12),
-
-        child: Row(
-
-          children: [
+        leading:
 
             char.image != null
 
-                ? ClipRRect(
+                ? CircleAvatar(
 
-                    borderRadius:
-                        BorderRadius.circular(
-                      50,
-                    ),
-
-                    child: Image.file(
-
+                    backgroundImage:
+                        FileImage(
                       char.image!,
-
-                      width: 70,
-
-                      height: 70,
-
-                      fit: BoxFit.cover,
                     ),
                   )
 
                 : const CircleAvatar(
-
-                    radius: 35,
 
                     child: Icon(
                       Icons.person,
                     ),
                   ),
 
-            const SizedBox(
-              width: 14,
-            ),
+        title: Text(
+          char.name,
+        ),
 
-            Expanded(
+        subtitle: Text(
 
-              child: Column(
+          char.appearance
+                  .isEmpty
 
-                crossAxisAlignment:
-                    CrossAxisAlignment
-                        .start,
+              ? "No appearance"
 
-                children: [
+              : char.appearance,
+        ),
 
-                  Text(
+        trailing: IconButton(
 
-                    char.name,
+          icon: const Icon(
+            Icons.delete,
+          ),
 
-                    style:
-                        const TextStyle(
+          onPressed: () {
 
-                      fontSize: 18,
+            setState(() {
 
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 6,
-                  ),
-
-                  Text(
-                    char.gender,
-                  ),
-
-                  const SizedBox(
-                    height: 6,
-                  ),
-
-                  Text(
-
-                    char.appearance
-                            .isEmpty
-
-                        ? "No appearance description"
-
-                        : char.appearance,
-
-                    maxLines: 2,
-
-                    overflow:
-                        TextOverflow
-                            .ellipsis,
-                  ),
-                ],
-              ),
-            ),
-
-            IconButton(
-
-              icon: const Icon(
-
-                Icons.delete,
-
-                color: Colors.red,
-              ),
-
-              onPressed: () {
-
-                setState(() {
-
-                  characters.removeAt(
-                    index,
-                  );
-                });
-              },
-            ),
-          ],
+              characters.removeAt(
+                index,
+              );
+            });
+          },
         ),
       ),
     );
   }
 
-  /// =========================
-  /// MAIN UI
-  /// =========================
-
-  Widget buildMainUI() {
-
-    return Padding(
-
-      padding:
-          const EdgeInsets.all(16),
-
-      child: ListView(
-
-        children: [
-
-          TextField(
-
-            controller:
-                backgroundController,
-
-            decoration:
-                const InputDecoration(
-
-              labelText:
-                  "Scene Background",
-
-              border:
-                  OutlineInputBorder(),
-            ),
-          ),
-
-          const SizedBox(
-            height: 20,
-          ),
-
-          TextField(
-
-            controller:
-                scenePromptController,
-
-            minLines: 5,
-
-            maxLines: 8,
-
-            decoration:
-                const InputDecoration(
-
-              labelText:
-                  "Scene Prompt",
-
-              hintText:
-                  "Describe the cinematic scene...",
-
-              border:
-                  OutlineInputBorder(),
-            ),
-          ),
-
-          const SizedBox(
-            height: 20,
-          ),
-
-          ElevatedButton.icon(
-
-            onPressed:
-                showAddCharacterDialog,
-
-            icon: const Icon(
-              Icons.add,
-            ),
-
-            label: const Text(
-              "Add Character",
-            ),
-          ),
-
-          const SizedBox(
-            height: 20,
-          ),
-
-          ...characters
-              .asMap()
-              .entries
-              .map(
-                (e) =>
-                    characterCard(
-                  e.value,
-                  e.key,
-                ),
-              ),
-
-          const SizedBox(
-            height: 30,
-          ),
-
-          SizedBox(
-
-            height: 60,
-
-            child: ElevatedButton(
-
-              onPressed:
-                  loading
-                      ? null
-                      : generateMovieNow,
-
-              child: const Text(
-
-                "Generate AI Movie",
-
-                style:
-                    TextStyle(
-
-                  fontSize: 18,
-
-                  fontWeight:
-                      FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(
-            height: 30,
-          ),
-
-          /// =========================
-          /// VIDEO PLAYER
-          /// =========================
-
-          if (videoController != null &&
-              videoController!
-                  .value
-                  .isInitialized)
-
-            Column(
-
-              crossAxisAlignment:
-                  CrossAxisAlignment
-                      .start,
-
-              children: [
-
-                Container(
-
-                  decoration:
-                      BoxDecoration(
-
-                    borderRadius:
-                        BorderRadius.circular(
-                      24,
-                    ),
-
-                    boxShadow: [
-
-                      BoxShadow(
-
-                        blurRadius: 25,
-
-                        spreadRadius: 2,
-
-                        offset:
-                            const Offset(
-                          0,
-                          10,
-                        ),
-
-                        color:
-                            Colors.black26,
-                      ),
-                    ],
-                  ),
-
-                  child: ClipRRect(
-
-                    borderRadius:
-                        BorderRadius.circular(
-                      24,
-                    ),
-
-                    child: SizedBox(
-
-                      height: 320,
-
-                      width:
-                          double.infinity,
-
-                      child: FittedBox(
-
-                        fit: BoxFit.cover,
-
-                        child: SizedBox(
-
-                          width:
-                              videoController!
-                                  .value
-                                  .size
-                                  .width,
-
-                          height:
-                              videoController!
-                                  .value
-                                  .size
-                                  .height,
-
-                          child: VideoPlayer(
-                            videoController!,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(
-                  height: 14,
-                ),
-
-                Row(
-
-                  children: [
-
-                    IconButton(
-
-                      onPressed:
-                          () async {
-
-                        if (videoController!
-                            .value
-                            .isPlaying) {
-
-                          await videoController!
-                              .pause();
-
-                        } else {
-
-                          await videoController!
-                              .play();
-                        }
-
-                        if (!mounted) return;
-
-                        setState(() {});
-                      },
-
-                      icon: Icon(
-
-                        videoController!
-                                .value
-                                .isPlaying
-
-                            ? Icons.pause
-
-                            : Icons.play_arrow,
-                      ),
-                    ),
-
-                    const SizedBox(
-                      width: 8,
-                    ),
-
-                    const Text(
-
-                      "AI Cinematic Replay",
-
-                      style: TextStyle(
-
-                        fontSize: 20,
-
-                        fontWeight:
-                            FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-          const SizedBox(
-            height: 20,
-          ),
-
-          if (finalDialogue != null)
-
-            Container(
-
-              padding:
-                  const EdgeInsets.all(
-                16,
-              ),
-
-              decoration:
-                  BoxDecoration(
-
-                borderRadius:
-                    BorderRadius.circular(
-                  20,
-                ),
-
-                color:
-                    Colors.black12,
-              ),
-
-              child: SelectableText(
-
-                finalDialogue!,
-
-                style:
-                    const TextStyle(
-
-                  height: 1.6,
-
-                  fontSize: 16,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+  /// =====================================
+  /// BUILD
+  /// =====================================
 
   @override
   Widget build(
@@ -1272,15 +889,139 @@ class _ReplayPageState
         title: const Text(
           "AI Cinematic Engine",
         ),
+      ),
 
-        centerTitle: true,
+      floatingActionButton:
+          FloatingActionButton(
+
+        onPressed:
+            showAddCharacterDialog,
+
+        child: const Icon(
+          Icons.add,
+        ),
       ),
 
       body: Stack(
 
         children: [
 
-          buildMainUI(),
+          Padding(
+
+            padding:
+                const EdgeInsets.all(
+              16,
+            ),
+
+            child: ListView(
+
+              children: [
+
+                TextField(
+
+                  controller:
+                      backgroundController,
+
+                  decoration:
+                      const InputDecoration(
+
+                    labelText:
+                        "Background",
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 20,
+                ),
+
+                TextField(
+
+                  controller:
+                      scenePromptController,
+
+                  minLines: 5,
+
+                  maxLines: 8,
+
+                  decoration:
+                      const InputDecoration(
+
+                    labelText:
+                        "Scene Prompt",
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 20,
+                ),
+
+                ...characters
+                    .asMap()
+                    .entries
+                    .map(
+                      (e) =>
+                          characterCard(
+                        e.value,
+                        e.key,
+                      ),
+                    ),
+
+                const SizedBox(
+                  height: 20,
+                ),
+
+                SizedBox(
+
+                  height: 60,
+
+                  child: ElevatedButton(
+
+                    onPressed:
+                        loading
+                            ? null
+                            : generateMovieNow,
+
+                    child: const Text(
+                      "Generate AI Movie",
+                    ),
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 30,
+                ),
+
+                if (videoController !=
+                        null &&
+                    videoController!
+                        .value
+                        .isInitialized)
+
+                  AspectRatio(
+
+                    aspectRatio:
+                        videoController!
+                            .value
+                            .aspectRatio,
+
+                    child: VideoPlayer(
+                      videoController!,
+                    ),
+                  ),
+
+                const SizedBox(
+                  height: 20,
+                ),
+
+                if (finalDialogue !=
+                    null)
+
+                  SelectableText(
+                    finalDialogue!,
+                  ),
+              ],
+            ),
+          ),
 
           if (loading)
 
@@ -1314,9 +1055,6 @@ class _ReplayPageState
                             Colors.white,
 
                         fontSize: 18,
-
-                        fontWeight:
-                            FontWeight.bold,
                       ),
                     ),
                   ],
