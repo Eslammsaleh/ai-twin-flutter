@@ -17,8 +17,6 @@ class CharacterData {
 
   String gender;
 
-  String appearance;
-
   File? image;
 
   File? voice;
@@ -28,8 +26,6 @@ class CharacterData {
     required this.name,
 
     required this.gender,
-
-    required this.appearance,
 
     this.image,
 
@@ -88,7 +84,7 @@ class _ReplayPageState
   String? finalDialogue;
 
   VideoPlayerController?
-  videoController;
+      videoController;
 
   /// =====================================
   /// CACHE
@@ -258,26 +254,6 @@ class _ReplayPageState
       await videoController!
           .play();
 
-      videoController!
-          .addListener(() async {
-
-        if (!mounted) return;
-
-        final v =
-            videoController!.value;
-
-        if (!v.isPlaying &&
-            !v.isBuffering &&
-            v.position <
-                v.duration) {
-
-          await videoController!
-              .play();
-        }
-
-        setState(() {});
-      });
-
       if (!mounted) return;
 
       setState(() {});
@@ -339,7 +315,16 @@ class _ReplayPageState
       );
 
       /// =========================
-      /// CHARACTERS
+      /// DETECT LANGUAGE
+      /// =========================
+
+      final detectedLanguage =
+          ApiService.detectLanguage(
+        scenePromptController.text,
+      );
+
+      /// =========================
+      /// FINAL CHARACTERS
       /// =========================
 
       List<Map<String, dynamic>>
@@ -366,7 +351,7 @@ class _ReplayPageState
           );
         }
 
-        /// VOICE
+        /// AUDIO
 
         if (char.voice != null) {
 
@@ -389,13 +374,12 @@ class _ReplayPageState
         finalCharacters.add({
 
           "name":
-              char.name,
+              char.name
+                  .trim()
+                  .toLowerCase(),
 
           "gender":
               char.gender,
-
-          "appearance":
-              char.appearance,
 
           "image_url":
               imageUrl,
@@ -410,7 +394,7 @@ class _ReplayPageState
       /// =========================
 
       updateLoading(
-        "Generating cinematic AI video...",
+        "Generating cinematic AI movie...",
       );
 
       final result =
@@ -426,14 +410,19 @@ class _ReplayPageState
         style:
             "ultra realistic cinematic",
 
+        language:
+            detectedLanguage,
+
         characters:
             finalCharacters,
       );
 
-      print(result);
+      debugPrint(
+        result.toString(),
+      );
 
       /// =========================
-      /// NULL RESPONSE
+      /// FAILED
       /// =========================
 
       if (result == null) {
@@ -442,10 +431,6 @@ class _ReplayPageState
           "No response from backend",
         );
       }
-
-      /// =========================
-      /// FAILED
-      /// =========================
 
       if (result["success"] !=
           true) {
@@ -494,7 +479,7 @@ class _ReplayPageState
       }
 
       /// =========================
-      /// INIT VIDEO
+      /// PREPARE VIDEO
       /// =========================
 
       updateLoading(
@@ -521,7 +506,7 @@ class _ReplayPageState
 
     } catch (e) {
 
-      print(
+      debugPrint(
         "GENERATE ERROR => $e",
       );
 
@@ -547,15 +532,6 @@ class _ReplayPageState
           ),
         ),
       );
-
-    } finally {
-
-      if (mounted) {
-
-        setState(() {
-          loading = false;
-        });
-      }
     }
   }
 
@@ -567,9 +543,6 @@ class _ReplayPageState
       showAddCharacterDialog() async {
 
     final nameController =
-        TextEditingController();
-
-    final appearanceController =
         TextEditingController();
 
     String gender = "male";
@@ -663,25 +636,6 @@ class _ReplayPageState
                     height: 15,
                   ),
 
-                  TextField(
-
-                    controller:
-                        appearanceController,
-
-                    maxLines: 3,
-
-                    decoration:
-                        const InputDecoration(
-
-                      labelText:
-                          "Appearance",
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 15,
-                  ),
-
                   ElevatedButton(
 
                     onPressed:
@@ -754,7 +708,7 @@ class _ReplayPageState
                   if (nameController
                       .text
                       .trim()
-                      .isEmpty) {
+                      .length < 2) {
 
                     return;
                   }
@@ -770,11 +724,6 @@ class _ReplayPageState
 
                       gender:
                           gender,
-
-                      appearance:
-                          appearanceController
-                              .text
-                              .trim(),
 
                       image:
                           selectedImage,
@@ -844,13 +793,7 @@ class _ReplayPageState
         ),
 
         subtitle: Text(
-
-          char.appearance
-                  .isEmpty
-
-              ? "No appearance"
-
-              : char.appearance,
+          char.gender,
         ),
 
         trailing: IconButton(

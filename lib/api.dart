@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// ===================================
@@ -9,7 +10,7 @@ import 'package:http/http.dart' as http;
 /// ===================================
 
 const String webhookUrl =
-    "https://n8n-culu.onrender.com/webhook/generate-veo-video";
+    "https://n8n-production-9d7d.up.railway.app/webhook/generate-veo-video";
 
 /// ===================================
 /// ☁️ CLOUDINARY
@@ -26,6 +27,24 @@ const String uploadPreset =
 /// ===================================
 
 class ApiService {
+
+  /// ===================================
+  /// 🌍 DETECT LANGUAGE
+  /// ===================================
+
+  static String detectLanguage(
+    String text,
+  ) {
+
+    final arabicRegex =
+        RegExp(r'[\u0600-\u06FF]');
+
+    return arabicRegex.hasMatch(text)
+
+        ? "Arabic"
+
+        : "English";
+  }
 
   /// ===================================
   /// 🌐 COMMON POST
@@ -51,17 +70,19 @@ class ApiService {
 
       try {
 
-        print(
+        debugPrint(
           "=================================",
         );
 
-        print(
+        debugPrint(
           "POST ATTEMPT => ${attempt + 1}",
         );
 
-        print("URL => $url");
+        debugPrint(
+          "URL => $url",
+        );
 
-        print(
+        debugPrint(
           "REQUEST BODY => ${jsonEncode(body)}",
         );
 
@@ -92,15 +113,15 @@ class ApiService {
                   ),
                 );
 
-        print(
+        debugPrint(
           "STATUS => ${response.statusCode}",
         );
 
-        print(
+        debugPrint(
           "RESPONSE => ${response.body}",
         );
 
-        print(
+        debugPrint(
           "=================================",
         );
 
@@ -126,7 +147,7 @@ class ApiService {
 
       } catch (e) {
 
-        print(
+        debugPrint(
           "POST ERROR => $e",
         );
 
@@ -137,9 +158,8 @@ class ApiService {
         }
 
         await Future.delayed(
-          Duration(
-            seconds:
-                2,
+          const Duration(
+            seconds: 2,
           ),
         );
       }
@@ -162,11 +182,11 @@ class ApiService {
 
     try {
 
-      print(
+      debugPrint(
         "=================================",
       );
 
-      print(
+      debugPrint(
         "UPLOADING FILE => ${file.path}",
       );
 
@@ -193,7 +213,6 @@ class ApiService {
               'file',
 
               file.path,
-
             ),
       );
 
@@ -204,7 +223,7 @@ class ApiService {
           await response.stream
               .bytesToString();
 
-      print(
+      debugPrint(
         "UPLOAD RESPONSE => $body",
       );
 
@@ -225,7 +244,7 @@ class ApiService {
 
     } catch (e) {
 
-      print(
+      debugPrint(
         "UPLOAD ERROR => $e",
       );
 
@@ -282,13 +301,23 @@ class ApiService {
 
     required String style,
 
-    required List<Map<String, dynamic>>
-    characters,
+    required String language,
 
-    String language =
-        "English",
+    required List<Map<String, dynamic>>
+        characters,
 
   }) async {
+
+    /// ===============================
+    /// 🌍 DETECT LANGUAGE
+    /// ===============================
+
+    final detectedLanguage =
+        detectLanguage(prompt);
+
+    /// ===============================
+    /// 📦 REQUEST BODY
+    /// ===============================
 
     final body = {
 
@@ -302,15 +331,19 @@ class ApiService {
           style.trim(),
 
       "language":
-          language,
+          detectedLanguage,
 
       "characters":
           characters,
     };
 
-    print(
+    debugPrint(
       "FINAL GENERATE BODY => ${jsonEncode(body)}",
     );
+
+    /// ===============================
+    /// 🚀 SEND REQUEST
+    /// ===============================
 
     final result =
         await postJson(
@@ -324,18 +357,26 @@ class ApiService {
       retries: 1,
     );
 
+    /// ===============================
+    /// ❌ NULL RESULT
+    /// ===============================
+
     if (result == null) {
 
-      print(
+      debugPrint(
         "NULL RESULT FROM BACKEND",
       );
 
       return null;
     }
 
-    print(
+    debugPrint(
       "FINAL RESULT => $result",
     );
+
+    /// ===============================
+    /// ⚠️ VIDEO CHECK
+    /// ===============================
 
     if (result["video_url"] ==
             null ||
@@ -343,7 +384,7 @@ class ApiService {
             .toString()
             .isEmpty) {
 
-      print(
+      debugPrint(
         "WARNING => VIDEO URL EMPTY",
       );
     }
