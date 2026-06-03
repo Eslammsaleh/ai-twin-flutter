@@ -9,6 +9,7 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  final _nickname = TextEditingController(); // الحقل الجديد للـ Nickname
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
@@ -17,6 +18,12 @@ class _SignUpPageState extends State<SignUpPage> {
   String? _error;
 
   Future<void> _signUp() async {
+    // التحقق من إدخال الاسم المستعار
+    if (_nickname.text.trim().isEmpty) {
+      setState(() => _error = "برجاء إدخال الاسم المستعار (Nickname).");
+      return;
+    }
+
     if (_password.text.trim() != _confirm.text.trim()) {
       setState(() => _error = "الباسورد وتأكيد الباسورد مش زي بعض.");
       return;
@@ -28,10 +35,16 @@ class _SignUpPageState extends State<SignUpPage> {
     });
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      // 1. إنشاء الحساب بالإيميل والباسورد
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _email.text.trim(),
         password: _password.text.trim(),
       );
+
+      // 2. تحديث الـ Nickname في ملف المستخدم على Firebase
+      if (userCredential.user != null) {
+        await userCredential.user!.updateDisplayName(_nickname.text.trim());
+      }
 
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/auth');
@@ -59,6 +72,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   void dispose() {
+    _nickname.dispose();
     _email.dispose();
     _password.dispose();
     _confirm.dispose();
@@ -78,9 +92,9 @@ class _SignUpPageState extends State<SignUpPage> {
               children: [
                 const SizedBox(height: 70),
                 Image.asset(
-  "assets/images/logo_apps.png",
-  height: 120,
-),
+                  "assets/images/logo_apps.png",
+                  height: 120,
+                ),
                 const SizedBox(height: 20),
                 const Text(
                   "Ai Twin",
@@ -102,6 +116,21 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                // Nickname Field
+                TextField(
+                  controller: _nickname,
+                  keyboardType: TextInputType.name,
+                  decoration: InputDecoration(
+                    hintText: "Nickname",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
                 // Email
                 TextField(
                   controller: _email,
@@ -186,7 +215,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      "have alraedy account?",
+                      "have already account?",
                       style: TextStyle(color: Colors.white),
                     ),
                     TextButton(
