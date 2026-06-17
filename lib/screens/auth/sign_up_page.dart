@@ -9,7 +9,7 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  final _nickname = TextEditingController(); // الحقل الجديد للـ Nickname
+  final _nickname = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
@@ -18,7 +18,6 @@ class _SignUpPageState extends State<SignUpPage> {
   String? _error;
 
   Future<void> _signUp() async {
-    // التحقق من إدخال الاسم المستعار
     if (_nickname.text.trim().isEmpty) {
       setState(() => _error = "برجاء إدخال الاسم المستعار (Nickname).");
       return;
@@ -35,15 +34,15 @@ class _SignUpPageState extends State<SignUpPage> {
     });
 
     try {
-      // 1. إنشاء الحساب بالإيميل والباسورد
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _email.text.trim(),
         password: _password.text.trim(),
       );
 
-      // 2. تحديث الـ Nickname في ملف المستخدم على Firebase
       if (userCredential.user != null) {
-        await userCredential.user!.updateDisplayName(_nickname.text.trim());
+        await userCredential.user!
+            .updateDisplayName(_nickname.text.trim());
       }
 
       if (!mounted) return;
@@ -91,10 +90,7 @@ class _SignUpPageState extends State<SignUpPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 70),
-                Image.asset(
-                  "assets/images/logo_apps.png",
-                  height: 120,
-                ),
+                Image.asset("assets/images/logo_apps.png", height: 120),
                 const SizedBox(height: 20),
                 const Text(
                   "Ai Twin",
@@ -116,10 +112,10 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Nickname Field
+
+                // Nickname
                 TextField(
                   controller: _nickname,
-                  keyboardType: TextInputType.name,
                   decoration: InputDecoration(
                     hintText: "Nickname",
                     filled: true,
@@ -131,6 +127,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
                 const SizedBox(height: 15),
+
                 // Email
                 TextField(
                   controller: _email,
@@ -146,6 +143,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
                 const SizedBox(height: 15),
+
                 // Password
                 TextField(
                   controller: _password,
@@ -161,6 +159,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
                 const SizedBox(height: 15),
+
                 // Confirm Password
                 TextField(
                   controller: _confirm,
@@ -175,7 +174,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
+
                 if (_error != null)
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -189,7 +190,9 @@ class _SignUpPageState extends State<SignUpPage> {
                       textAlign: TextAlign.center,
                     ),
                   ),
+
                 const SizedBox(height: 15),
+
                 SizedBox(
                   height: 50,
                   child: ElevatedButton(
@@ -206,11 +209,18 @@ class _SignUpPageState extends State<SignUpPage> {
                           )
                         : const Text(
                             "Create Account",
-                            style: TextStyle(fontSize: 18),
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
                           ),
                   ),
                 ),
+
                 const SizedBox(height: 15),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -220,10 +230,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text(
+                      child: Text(
                         " login",
                         style: TextStyle(
-                          color: Colors.deepPurpleAccent,
+                          color: Colors.white.withOpacity(0.9),
                           fontSize: 16,
                         ),
                       ),

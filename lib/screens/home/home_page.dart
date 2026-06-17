@@ -1,25 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/screens/chat/chat_page.dart';
-import 'package:provider/provider.dart';
-
 import 'package:flutter_application_1/theme/app_colors.dart';
-import 'package:flutter_application_1/widgets/info_card.dart';
-
-import '../../providers/twin_provider.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   String _getUserName() {
     final user = FirebaseAuth.instance.currentUser;
-    
-    // 1. محاولة جلب الـ Nickname المخزن في الـ displayName أولاً
-    if (user?.displayName != null && user!.displayName!.trim().isNotEmpty) {
+
+    if (user?.displayName != null &&
+        user!.displayName!.trim().isNotEmpty) {
       return user.displayName!;
     }
 
-    // 2. حل احتياطي في حال كان الحساب قديماً ولم يسجل بـ Nickname
     String email = user?.email ?? "User";
     String namePart = email.split('@')[0];
     String cleanName = namePart.replaceAll(RegExp(r'\d'), '');
@@ -30,8 +24,11 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final twin = Provider.of<TwinProvider>(context);
     final userName = _getUserName();
+
+    Color adaptive(Color light, Color dark) {
+      return isDark ? dark : light;
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -41,7 +38,6 @@ class HomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Welcome
               const Text(
                 "Welcome back",
                 style: TextStyle(
@@ -51,7 +47,7 @@ class HomePage extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               Text(
-                userName, // سيعرض هنا الـ Nickname الجديد مباشرة 🔥
+                userName,
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -66,125 +62,74 @@ class HomePage extends StatelessWidget {
                   color: isDark ? Colors.white : AppColors.textLight,
                 ),
               ),
-              const SizedBox(height: 25),
-              // Info Cards
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InfoCard(
-                    title: "Memories",
-                    value: twin.profile.memories.toString(),
-                    icon: Icons.favorite,
-                  ),
-                  InfoCard(
-                    title: "Twin Level",
-                    value: twin.profile.level,
-                    icon: Icons.star,
-                  ),
-                  InfoCard(
-                    title: "Assistant",
-                    value: "Open",
-                    icon: Icons.smart_toy,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ChatPage(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
               const SizedBox(height: 35),
-              Text(
-                "FEATURED TOOLS",
+              const Text(
+                "What would you like to do?",
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.textLight,
                 ),
               ),
+              const SizedBox(height: 20),
+
+              // Create AI Movie
+              _actionCard(
+                context,
+                icon: Icons.movie_creation,
+                title: "Create AI Movie",
+                subtitle:
+                    "Generate cinematic videos from your ideas",
+                bgColor: adaptive(
+                  const Color(0xFFF4ECFA),
+                  const Color(0xFF2A1F33),
+                ),
+                iconColor: Colors.deepPurple,
+                onTap: () {
+                  Navigator.pushNamed(context, '/replay');
+                },
+              ),
+
               const SizedBox(height: 15),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                childAspectRatio: 1.1,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                children: [
-                  _featureBox(
-                    Icons.smart_toy,
-                    "AI Assistant",
-                    Colors.deepPurple,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ChatPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  _featureBox(
-                    Icons.auto_graph,
-                    "Progress",
-                    Colors.green,
-                  ),
-                  _featureBox(
-                    Icons.favorite,
-                    "Memories",
-                    Colors.red,
-                  ),
-                  _featureBox(
-                    Icons.settings,
-                    "Settings",
-                    Colors.orange,
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/settings',
-                      );
-                    },
-                  ),
-                ],
+
+              // AI Assistant
+              _actionCard(
+                context,
+                icon: Icons.smart_toy,
+                title: "AI Assistant",
+                subtitle:
+                    "Get help with prompts, characters and scenes",
+                bgColor: adaptive(
+                  const Color(0xFFEFF6FF),
+                  const Color(0xFF1A2A3A),
+                ),
+                iconColor: Colors.blue,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ChatPage(),
+                    ),
+                  );
+                },
               ),
-              const SizedBox(height: 30),
-              // Cinematic Section
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(25),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFFe1b2ff),
-                      Color(0xFFd3a4ff),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
+
+              const SizedBox(height: 15),
+
+              // Settings
+              _actionCard(
+                context,
+                icon: Icons.settings,
+                title: "Settings",
+                subtitle:
+                    "Customize your experience and account",
+                bgColor: adaptive(
+                  const Color(0xFFFFF4EA),
+                  const Color(0xFF2A241C),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Expanded(
-                      child: Text(
-                        "AI Cinematic Assistant\nLearn cinematic prompting",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Icon(
-                      Icons.flash_on,
-                      color: AppColors.primary,
-                      size: 45,
-                    ),
-                  ],
-                ),
+                iconColor: Colors.orange,
+                onTap: () {
+                  Navigator.pushNamed(context, '/settings');
+                },
               ),
             ],
           ),
@@ -193,42 +138,109 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _featureBox(
-    IconData icon,
-    String title,
-    Color color, {
-    VoidCallback? onTap,
+  Widget _actionCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color bgColor,
+    required Color iconColor,
+    required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return _AnimatedActionCard(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(18),
+          color: bgColor,
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
-            CircleAvatar(
-              radius: 25,
-              backgroundColor: color,
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: iconColor,
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Icon(
                 icon,
                 color: Colors.white,
-                size: 28,
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: isDarkText(context),
+                    ),
+                  ),
+                ],
               ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: iconColor,
+              size: 18,
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Color isDarkText(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.white70
+        : Colors.black54;
+  }
+}
+
+class _AnimatedActionCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const _AnimatedActionCard({
+    required this.child,
+    required this.onTap,
+  });
+
+  @override
+  State<_AnimatedActionCard> createState() =>
+      _AnimatedActionCardState();
+}
+
+class _AnimatedActionCardState
+    extends State<_AnimatedActionCard> {
+  double scale = 1.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => scale = 0.97),
+      onTapUp: (_) {
+        setState(() => scale = 1.0);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => scale = 1.0),
+      child: AnimatedScale(
+        scale: scale,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: widget.child,
       ),
     );
   }

@@ -61,7 +61,7 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepPurple, // نفس لون الـ RegisterScreen
+      backgroundColor: Colors.deepPurple,
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
@@ -92,6 +92,7 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
                 // Email
                 TextField(
                   controller: _email,
@@ -106,7 +107,9 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 15),
+
                 // Password
                 TextField(
                   controller: _password,
@@ -121,7 +124,9 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
+
                 if (_error != null)
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -135,7 +140,9 @@ class _SignInPageState extends State<SignInPage> {
                       textAlign: TextAlign.center,
                     ),
                   ),
+
                 const SizedBox(height: 15),
+
                 SizedBox(
                   height: 50,
                   child: ElevatedButton(
@@ -146,18 +153,22 @@ class _SignInPageState extends State<SignInPage> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    child:
-                        _loading
-                            ? const CircularProgressIndicator(
+                    child: _loading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            "Login",
+                            style: TextStyle(
+                              fontSize: 18,
                               color: Colors.white,
-                            )
-                            : const Text(
-                              "Login",
-                              style: TextStyle(fontSize: 18),
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
                             ),
+                          ),
                   ),
                 ),
+
                 const SizedBox(height: 15),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -166,12 +177,14 @@ class _SignInPageState extends State<SignInPage> {
                       style: TextStyle(color: Colors.white),
                     ),
                     TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/signup'),
-                      child: const Text(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/signup'),
+                      child: Text(
                         "  Sign Up",
                         style: TextStyle(
-                          color: Colors.deepPurpleAccent,
+                          color: Colors.white.withOpacity(0.9),
                           fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),

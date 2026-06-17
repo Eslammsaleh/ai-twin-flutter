@@ -4,11 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 
-/// Providers
-import 'providers/twin_provider.dart';
-import 'theme/theme_provider.dart';
-
 /// Theme
+import 'theme/theme_provider.dart';
 import 'theme/app_theme.dart';
 
 /// Screens
@@ -26,29 +23,19 @@ import 'screens/settings/settings_page.dart';
 
 import 'screens/splash/splash_screen.dart';
 
-import 'screens/timeline/timeline_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
-    options:
-        DefaultFirebaseOptions
-            .currentPlatform,
+    options: DefaultFirebaseOptions.currentPlatform,
   );
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create:
-              (_) =>
-                  ThemeProvider(),
-        ),
-
-        ChangeNotifierProvider(
-          create:
-              (_) => TwinProvider(),
+          create: (_) => ThemeProvider(),
         ),
       ],
       child: const MyApp(),
@@ -62,74 +49,54 @@ class MyApp extends StatelessWidget {
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     final themeProvider =
-        context.watch<
-          ThemeProvider
-        >();
+        context.watch<ThemeProvider>();
 
     return MaterialApp(
-      debugShowCheckedModeBanner:
-          false,
+      debugShowCheckedModeBanner: false,
 
       title: 'LifeTwin',
 
-      theme:
-          AppTheme.lightTheme,
+      theme: AppTheme.lightTheme,
 
-      darkTheme:
-          AppTheme.darkTheme,
+      darkTheme: AppTheme.darkTheme,
 
-      themeMode:
-          themeProvider.isDark
-              ? ThemeMode.dark
-              : ThemeMode.light,
+      themeMode: themeProvider.isDark
+          ? ThemeMode.dark
+          : ThemeMode.light,
 
-      initialRoute:
-          '/splash',
+      initialRoute: '/splash',
 
       routes: {
-        '/splash':
-            (context) =>
-                const SplashScreen(),
+        '/splash': (context) =>
+            const SplashScreen(),
 
-        '/onboarding':
-            (context) =>
-                const OnboardingScreen(),
+        '/onboarding': (context) =>
+            const OnboardingScreen(),
 
-        '/auth':
-            (context) =>
-                const AuthGate(),
+        '/auth': (context) =>
+            const AuthGate(),
 
-        '/signin':
-            (context) =>
-                const SignInPage(),
+        '/signin': (context) =>
+            const SignInPage(),
 
-        '/signup':
-            (context) =>
-                const SignUpPage(),
+        '/signup': (context) =>
+            const SignUpPage(),
 
-        '/home':
-            (context) =>
-                const ReplayPage(),
+        '/home': (context) =>
+            const ReplayPage(),
 
-        '/chat':
-            (context) =>
-                const ChatPage(),
+        '/chat': (context) =>
+            const ChatPage(),
 
-        '/timeline':
-            (context) =>
-                const TimelinePage(),
+        
 
-        '/replay':
-            (context) =>
-                const ReplayPage(),
+        '/replay': (context) =>
+            const ReplayPage(),
 
-        '/settings':
-            (context) =>
-                const SettingsPage(),
+        '/settings': (context) =>
+            const SettingsPage(),
       },
     );
   }
